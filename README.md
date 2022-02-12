@@ -1,6 +1,4 @@
 # TheCrafting
-A minecraft server written in pure c#  
+A Minecraft Server in Pure C#  
   
-Working with notchain minecraft 1.4.7 client  
-  
-Currently it's only a placeholder without any functionality
+Working with notchain minecraft 1.16.5 client
