@@ -10,8 +10,7 @@ namespace Minecraft.World
         internal DataPackList()
         {
             Disabled = new HashSet<string>();
-            Enabled = new HashSet<string>();
-            Enabled.Add("vanilla");
+            Enabled = new HashSet<string> { "vanilla" };
         }
     }
 }

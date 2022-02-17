@@ -9,7 +9,7 @@ namespace Minecraft.Command
 {
     internal class CommandHandler
     {
-        public static string nick = "";
+        private static string Nick = "";
         public static void TryParse(string command)
         {
             if (command == null || command.Length == 0) return;
@@ -20,12 +20,12 @@ namespace Minecraft.Command
                 switch(label)
                 {
                     case "exit":
-                        EffectiveTools.ShutdownServer();
+                        MinecraftServer.GetInstance().Stop();
                         break;
                     case "help":
                         Console.Write("== Help");
                         Console.Write(" | exit - shutdown server");
-                        Console.Write(" | help - show this");
+                        Console.Write(" | help - show this text");
                         Console.Write(" | clear - clear console");
                         break;
                     case "clear":
@@ -91,17 +91,25 @@ namespace Minecraft.Command
                         Console.Write(Encoding.UTF8.GetString(bytes));
                         break;
                     case "eu":
-                        nick = command[4..];
-                        Console.Write('"' + nick + '"');
+                        SetNickname(command[4..]);
+                        Console.Write('"' + GetNickname() + '"');
                         break;
                     case "du":
-                        nick = "";
+                        SetNickname();
                         break;
                     default:
                         ConsoleOutputWrapper.Write("Unknown command. Type \"/help\" for help.", ConsoleOutputLevel.LogLevel.ERROR);
                         break;
                 }
             }
+        }
+        public static void SetNickname(string nickname = "")
+        {
+            Nick = nickname;
+        }
+        public static string GetNickname()
+        {
+            return Nick;
         }
     }
 }

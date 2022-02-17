@@ -8,7 +8,7 @@ namespace Minecraft.Tools
 {
     public class ConsoleInputHandler
     {
-        public bool Enabled { get; private set; } = false;
+        private bool Enabled = false;
         private Thread? Thread;
         private string Input;
 
@@ -20,11 +20,11 @@ namespace Minecraft.Tools
 
         internal void Enable()
         {
-            Enabled = true;
+            SetEnabled(true);
             Thread = new Thread(() =>
             {
                 Thread.CurrentThread.Name = "Console Input Thread";
-                while (Enabled)
+                while (IsEnabled())
                 {
                     if (Console.KeyAvailable)
                     {
@@ -66,7 +66,7 @@ namespace Minecraft.Tools
 
         internal void Disable()
         {
-            Enabled = false;
+            SetEnabled(false);
         }
 
         public static bool IsPrintableChar(char character)
@@ -86,10 +86,20 @@ namespace Minecraft.Tools
 
         internal void UpdateInput(TextWriter? writer = null)
         {
-            if (!Enabled) return;
+            if (!IsEnabled()) return;
             if (writer is null) writer = Console.Out;
             ClearLastLine(0, writer);
             writer.Write('>' + (Input.Length >= Console.WindowWidth - 1 ? new string(Input.Skip(Input.Length - Console.WindowWidth + 1).ToArray()) : Input));
+        }
+
+        public bool IsEnabled()
+        {
+            return Enabled;
+        }
+
+        private void SetEnabled(bool value)
+        {
+            Enabled = value;
         }
     }
 }

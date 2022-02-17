@@ -28,7 +28,7 @@ namespace Minecraft.Packets
             answer.players.max = 20;
             answer.players.online = 0;
 
-            answer.description = new Chat.Builder.TextComponent(MinecraftServer.MOTD, false, false, false, false, false, "minecraft:alt", "yellow");
+            answer.description = new Chat.Builder.TextComponent(MinecraftServer.GetInstance().GetConfigManager().GetMOTD(), false, false, false, false, false, "minecraft:alt", "yellow");
 
             byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(answer);
 

@@ -10,8 +10,7 @@ namespace Minecraft
     {
         private readonly Socket Client;
         private PlayerConnectionState State;
-
-        public bool Connected { get; private set; }
+        private bool Connected;
 
         internal PlayerConnection(Socket client)
         {
@@ -52,8 +51,13 @@ namespace Minecraft
 
         public void SendRaw(byte[] message)
         {
-            if (MinecraftServer.LogOutgoing) Console.WriteLine("\nBINARY(HEX): " + BitConverter.ToString(message).Replace('-', ' '));
+            if (MinecraftServer.GetInstance().GetLogOutgoing()) Console.WriteLine("\nBINARY(HEX): " + BitConverter.ToString(message).Replace('-', ' '));
             Client.Send(message);
+        }
+
+        public bool IsConnected()
+        {
+            return Connected;
         }
     }
 }

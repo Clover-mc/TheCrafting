@@ -16,12 +16,12 @@ namespace Minecraft
             Player player = new Player(new PlayerConnection(client.Client), "");
             try
             {
-                while (player.GetConnection().Connected)
+                while (player.GetConnection().IsConnected())
                 {
                     byte[] packet_raw = player.ReceivePacket();
                     if (packet_raw.Length == 0) continue;
 
-                    if (MinecraftServer.LogIncoming)
+                    if (MinecraftServer.GetInstance().GetLogIncoming())
                     {
                         Console.WriteLine("==New incoming packet==");
                         Console.WriteLine("RAW: " + BitConverter.ToString(packet_raw, 0, packet_raw.Length).Replace('-', ' '));

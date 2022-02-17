@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -12,59 +13,51 @@ using Minecraft.Tools;
 
 namespace Minecraft
 {
-    public class MinecraftServer
+    public class MinecraftServer : IServer
     {
-        public static bool LogIncoming { get; private set; } = false;
-        public static bool LogOutgoing { get; private set; } = false;
-        public static bool DisableConsole { get; private set; } = false;
-        public static string MOTD { get; private set; } = "";
-        internal static MinecraftServer? Instance { get; private set; }
-
-        public readonly static FilesHandler Files = new FilesHandler();
-        public readonly static ConsoleInputHandler ConsoleInputHandler = new ConsoleInputHandler();
-
-        public bool Enabled { get; private set; } = false;
+        private DateTime StartTime;
+        private bool LogIncoming = false;
+        private bool LogOutgoing = false;
+        private bool DisableConsole = false;
+        private bool Enabled = false;
         private bool Launched = false;
-        private readonly ConfigManager CfgManager;
+
+        private readonly static MinecraftServer Instance = new MinecraftServer();
+
+        private readonly static FilesHandler Files = new FilesHandler();
+        private readonly static ConsoleInputHandler ConsoleInputHandler = new ConsoleInputHandler();
+        private readonly ConfigManager CfgManager = new ConfigManager("server.properties");
 
         //public readonly byte[] PublicKey = Array.Empty<byte>();
         //internal readonly RSA Rsa;
 
-        public readonly DateTime StartTime;
+        private readonly List<World.World> Worlds = new List<World.World>();
 
-        public readonly World.World World;
-
-        private MinecraftServer(bool log_in = false, bool log_out = false, bool disable_console = false)
+        private MinecraftServer()
         {
-            StartTime = DateTime.Now;
-            Console.Title = "TheCrafting 1.16.5 | Plugins available: 0 | Plugins enabled: 0";
-            Instance = this;
-            Console.SetOut(new ConsoleOutputWrapper());
-            ConsoleOutputWrapper.Initialize();
-            Thread.CurrentThread.Name = "main";
-            LogIncoming = log_in;
-            LogOutgoing = log_out;
-            DisableConsole = disable_console;
-
-            Files.Initialize();
-
-            Console.WriteLine("Reading config...");
-            CfgManager = new ConfigManager("server.properties");
-            MOTD = CfgManager.MOTD;
-
-            Console.WriteLine("Reading/Creating World");
-            World = new World.World(CfgManager.WorldName, true);
-
-
-            if (!DisableConsole) ConsoleInputHandler.Enable();
-
             //Rsa = RSA.Create(1024);
             //PublicKey = Rsa.ExportRSAPublicKey();
         }
 
-        public void Start()
+        public void Start(string[] args)
         {
-            TcpListener listener = new TcpListener(IPAddress.Any, CfgManager.PORT);
+            StartTime = DateTime.Now;
+            LogIncoming = args.Contains("log-incoming");
+            LogOutgoing = args.Contains("log-outgoing");
+            DisableConsole = args.Contains("noconsole");
+
+            Console.SetOut(new ConsoleOutputWrapper());
+            ConsoleOutputWrapper.Initialize();
+            Thread.CurrentThread.Name = "main";
+
+            Files.Initialize();
+
+            Console.WriteLine("Reading/Creating World");
+            Worlds.Add(new World.World(CfgManager.GetWorldName(), true));
+
+            if (!DisableConsole) ConsoleInputHandler.Enable();
+
+            TcpListener listener = new TcpListener(IPAddress.Any, CfgManager.GetPort());
             Enabled = true;
             listener.Start();
 
@@ -94,8 +87,8 @@ namespace Minecraft
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
-                ConsoleOutputWrapper.Writer.WriteLine("\nOh, It's looks like server was crashed due to error!");
-                ConsoleOutputWrapper.Writer.WriteLine("\nPress any key to continue . . .");
+                ConsoleOutputWrapper.GetWriter().WriteLine("\nOh, It's looks like server was crashed due to error!");
+                ConsoleOutputWrapper.GetWriter().WriteLine("\nPress any key to continue . . .");
                 Console.Read();
             }
 
@@ -109,13 +102,51 @@ namespace Minecraft
             Process.GetCurrentProcess().Kill();
         }
 
+        public bool GetLogIncoming()
+        {
+            return LogIncoming;
+        }
+        public bool GetLogOutgoing()
+        {
+            return LogOutgoing;
+        }
+
+        public ConfigManager GetConfigManager()
+        {
+            return CfgManager;
+        }
+        
+        public static MinecraftServer GetInstance()
+        {
+            return Instance;
+        }
+
+        public bool IsLaunched()
+        {
+            return Launched;
+        }
+
+        public List<World.World> GetWorlds()
+        {
+            return Worlds;
+        }
+
+        public static FilesHandler GetFilesHandler()
+        {
+            return Files;
+        }
+
+        public static ConsoleInputHandler GetConsoleInput()
+        {
+            return ConsoleInputHandler;
+        }
+
         public static int Main(string[] args)
         {
-            if (Instance is null || !Instance.Launched)
+            if (!GetInstance().IsLaunched())
             {
-                MinecraftServer server = new MinecraftServer(args.Contains("log-incoming"), args.Contains("log-outgoing"), args.Contains("noconsole"));
-                if (Instance is not null) Instance.Launched = true;
-                server.Start();
+                GetInstance().Launched = true;
+                GetInstance().Start(args);
                 return 0;
             }
             return 1;

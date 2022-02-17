@@ -2,6 +2,7 @@
 //using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
+using Minecraft.Command;
 using Minecraft.Chat.Builder;
 using Minecraft.Entities;
 using Minecraft.Packets;
@@ -12,7 +13,7 @@ namespace Minecraft.Connection.StateHandlers
 {
     internal class LoginStateHandler : StateHandler
     {
-        public static bool IsCracked = true;
+        private static bool IsCracked = true;
         public static LoginStateHandler Instance = new LoginStateHandler();
         internal override void Handle(Player player, byte[] packet)
         {
@@ -25,9 +26,9 @@ namespace Minecraft.Connection.StateHandlers
             {
                 string nickname = stream.ReadString();
 
-                if (Command.CommandHandler.nick != "")
+                if (CommandHandler.GetNickname() != "")
                 {
-                    nickname = Command.CommandHandler.nick;
+                    nickname = CommandHandler.GetNickname();
                 }
 
                 if (nickname.Length < 3)
@@ -70,12 +71,21 @@ namespace Minecraft.Connection.StateHandlers
             }
         }
 
+        public static void SetCracked(bool cracked)
+        {
+            IsCracked = cracked;
+        }
+        public static bool GetCracked()
+        {
+            return IsCracked;
+        }
+
         private static void PlayerLoginKick(TextComponent text, Player player)
         {
             MStream kick = new MStream();
             kick.Write(new VarInt((int)LoginOutId.DISCONNECT_LOGIN));
             kick.Write(Json.JsonToString(text));
-            player.GetConnection().SendRaw(PacketPack.Pack(kick));
+            player.GetConnection().SendRaw(EffectiveTools.PackPacket(kick));
             player.GetConnection().CloseConnection();
         }
     }

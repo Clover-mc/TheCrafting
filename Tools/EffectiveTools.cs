@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 
 namespace Minecraft.Tools
@@ -68,7 +67,7 @@ namespace Minecraft.Tools
         public static void ClearLineAndGoTo(int line)
         {
             Console.SetCursorPosition(0, line);
-            ConsoleOutputWrapper.Writer.Write(new string(' ', Console.WindowWidth));
+            ConsoleOutputWrapper.GetWriter().Write(new string(' ', Console.WindowWidth));
             Console.SetCursorPosition(0, line);
         }
 
@@ -77,19 +76,9 @@ namespace Minecraft.Tools
             int top = Console.CursorTop, left = Console.CursorLeft;
 
             Console.SetCursorPosition(0, line);
-            ConsoleOutputWrapper.Writer.Write(new string(' ', Console.WindowWidth));
+            ConsoleOutputWrapper.GetWriter().Write(new string(' ', Console.WindowWidth));
 
             Console.SetCursorPosition(left, top);
-        }
-
-        public static void ShutdownServer()
-        {
-            if (MinecraftServer.Instance is not null) MinecraftServer.Instance.Stop();
-            else
-            {
-                ConsoleOutputWrapper.Write(ConsoleColor.Red, "SERVER INSTANCE VARIABLE IS NULL TERMINATING SERVER'S PROCESS!!!", ConsoleOutputLevel.LogLevel.ERROR);
-                Process.GetCurrentProcess().Kill();
-            }
         }
 
         public static byte[] AppendByteArray(byte[] array, int length)
@@ -97,6 +86,17 @@ namespace Minecraft.Tools
             if (array.Length >= length) return array;
             byte[] result = new byte[length];
             array.CopyTo(result, length - array.Length - 1);
+            return result;
+        }
+
+        public static byte[] PackPacket(MStream stream)
+        {
+            VarInt length = new VarInt(stream.GetArray().Length);
+            byte[] result = new byte[length.ToInt() + length.ToPackedArray().Length];
+
+            length.ToPackedArray().CopyTo(result, 0);
+            stream.GetArray().CopyTo(result, length.ToPackedArray().Length);
+
             return result;
         }
     }
