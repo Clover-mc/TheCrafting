@@ -1,26 +1,27 @@
-﻿namespace Minecraft.Packets
+﻿using Minecraft.Tools;
+using System.Collections.Generic;
+
+namespace Minecraft.Packets
 {
-    public class SpawnPositionPacket : OutgoingPacket
+    public class SpawnPositionPacket : IPacket
     {
         private MStream Stream;
+
+        public int X { get; private set; }
+        public int Y { get; private set; }
+        public int Z { get; private set; }
+
+        public PacketList Id => PacketList.SPAWN_POSITION;
+        public int PacketLength => 13;
+        public IEnumerable<byte> Raw => Stream.Array;
 
         public SpawnPositionPacket(int x, int y, int z)
         {
             Stream = new MStream();
-            Stream.WriteByte(0x06);
+            Stream.WriteByte((byte)Id);
             Stream.Write(x);
             Stream.Write(y);
             Stream.Write(z);
-        }
-
-        public override byte GetId()
-        {
-            return 0x06;
-        }
-
-        internal override byte[] GetRaw()
-        {
-            return Stream.GetArray();
         }
     }
 }

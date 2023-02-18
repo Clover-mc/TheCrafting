@@ -1,48 +1,39 @@
-﻿using System.IO.Compression;
+﻿using System;
+using System.Collections.Generic;
+using Minecraft.Tools;
 
 namespace Minecraft.Packets
 {
-    public class MapChunkBulkPacket : OutgoingPacket
+    public class MapChunkBulkPacket : IPacket
     {
-        private MStream Stream;
-        private DeflateStream Deflate;
+        private readonly MStream Stream;
+
+        public short ChunkColumnCount { get; private set; }
+        public bool SendSkyLight { get; private set; }
+
+        public PacketList Id => PacketList.MAP_CHUNK_BULK;
+        public int PacketLength => -1;
+        public IEnumerable<byte> Raw => Stream.Array;
 
         public MapChunkBulkPacket(short chunk_column_count, bool send_sky_light, byte[] data)
         {
-            byte[] new_data;
-            using (MemoryStream ms = new MemoryStream())
-            {
-                Deflate = new DeflateStream(ms, CompressionLevel.SmallestSize);
-                Deflate.Write(data, 0, data.Length);
-                new_data = ms.ToArray();
-            }
+            ChunkColumnCount = chunk_column_count;
+            SendSkyLight = send_sky_light;
+
             Stream = new MStream();
-            Stream.WriteByte(0x38);
-            Stream.Write(chunk_column_count);
-            Stream.Write(new_data.Length);
-            Stream.Write(send_sky_light);
-            Stream.Write(new_data, 0, new_data.Length);
-            for (int x = 0; x < 7; x++)
-            {
-                for (int y = 0; y < 7; y++)
+            Stream.WriteByte((byte)Id);
+            Stream.Write(ChunkColumnCount);
+            Stream.Write(data.Length);
+            Stream.Write(SendSkyLight);
+            Stream.Write(data, 0, data.Length);
+            for (int x = 0; x < Math.Sqrt(ChunkColumnCount); x++)
+                for (int z = 0; z < Math.Sqrt(ChunkColumnCount); z++)
                 {
                     Stream.Write(x);
-                    Stream.Write(y);
-                    Stream.Write((ushort)15);
+                    Stream.Write(z);
                     Stream.Write((ushort)0);
-                    
+                    Stream.Write((ushort)0);
                 }
-            }
-        }
-
-        public override byte GetId()
-        {
-            return 0x38;
-        }
-
-        internal override byte[] GetRaw()
-        {
-            return Stream.GetArray();
         }
     }
 }

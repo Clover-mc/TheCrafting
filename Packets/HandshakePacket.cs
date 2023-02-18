@@ -1,43 +1,49 @@
-﻿namespace Minecraft.Packets
-{
-    public class HandshakePacket : IncomingPacket
-    {
-        private MStream Stream;
-        private int ProtocolVersion;
-        private string Nickname;
-        private string ServerAddress;
-        private int ServerPort;
+﻿using System;
+using System.Collections.Generic;
+using Minecraft.Tools;
 
-        public HandshakePacket(int protocol_version, string nickname, string server_address, int server_port)
+namespace Minecraft.Packets
+{
+    public class HandshakePacket : IPacket
+    {
+        private readonly MStream Stream;
+        public byte ProtocolVersion { get; set; }
+        public string Nickname { get; set; }
+        public string ServerAddress { get; set; }
+        public int ServerPort { get; set; }
+
+        public int PacketLength { get; private set; }
+        public PacketList Id => PacketList.HANDSHAKE;
+        public IEnumerable<byte> Raw => Stream.Array;
+
+        public HandshakePacket(byte protocolVersion, string nickname, string address, int port)
         {
-            ProtocolVersion = protocol_version;
+            ProtocolVersion = protocolVersion;
             Nickname = nickname;
-            ServerAddress = server_address;
-            ServerPort = server_port;
+            ServerAddress = address;
+            ServerPort = port;
+
+            PacketLength = 10 + (Nickname.Length + ServerAddress.Length) * 2; // Every string is double-sized
 
             Stream = new MStream();
-            Stream.WriteByte(0x02);
-            Stream.Write((short)ProtocolVersion);
+            Stream.WriteByte((byte)Id);
+            Stream.Write(ProtocolVersion);
             Stream.Write(Nickname);
             Stream.Write(ServerAddress);
             Stream.Write(ServerPort);
         }
 
-        //public HandshakePacket(byte[] packet)
-        //{
-        //    Stream = MStream.From(packet);
-        //    byte[] data = Stream.GetArray();
-        //    if (data[0] != GetId()) throw new ArgumentException("Given byte array is not \"Handshake Packet\"!");
-        //}
-
-        public override byte GetId()
+        public HandshakePacket(IEnumerable<byte> packet)
         {
-            return 0x02;
-        }
+            Stream = new MStream(packet);
+            if (Stream.Read() != (byte)Id) throw new ArgumentException("Given byte array is not " + nameof(HandshakePacket) + '!');
 
-        internal override byte[] GetRaw()
-        {
-            return Stream.GetArray();
+            ProtocolVersion = Stream.ReadByte();
+            Nickname = Stream.ReadString();
+            ServerAddress = Stream.ReadString();
+            ServerPort = Stream.ReadInt();
+
+            PacketLength = 10 + (Nickname.Length + ServerAddress.Length) * 2; // Every string is double-sized
         }
     }
 }

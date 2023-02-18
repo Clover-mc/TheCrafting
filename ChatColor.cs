@@ -1,30 +1,35 @@
-﻿namespace Minecraft
-{
-    public class ChatColor
-    {
-        public const char CHARACTER       = '\xA7';
-        public const string BLACK         = "\xA7\x30";
-        public const string DARK_BLUE     = "\xA7\x31";
-        public const string DARK_GREEN    = "\xA7\x32";
-        public const string DARK_AQUA     = "\xA7\x33";
-        public const string DARK_RED      = "\xA7\x34";
-        public const string DARK_PURPLE   = "\xA7\x35";
-        public const string GOLD          = "\xA7\x36";
-        public const string GRAY          = "\xA7\x37";
-        public const string DARK_GRAY     = "\xA7\x38";
-        public const string BLUE          = "\xA7\x39";
-        public const string GREEN         = "\xA7\x61";
-        public const string AQUA          = "\xA7\x62";
-        public const string RED           = "\xA7\x63";
-        public const string LIGHT_PURPLE  = "\xA7\x64";
-        public const string YELLOW        = "\xA7\x65";
-        public const string WHITE         = "\xA7\x66";
+﻿using Minecraft.Tools;
 
-        public const string OBFUSCATED    = "\xA7\x6B";
-        public const string BOLD          = "\xA7\x6C";
-        public const string STRIKETHROUGH = "\xA7\x6D";
-        public const string UNDERLINE     = "\xA7\x6E";
-        public const string ITALIC        = "\xA7\x6F";
-        public const string RESET         = "\xA7\x72";
+namespace Minecraft
+{
+    public class ChatColor : Enumeration
+    {
+        public const char CHARACTER = '\xA7';
+
+        public static readonly ChatColor BLACK         = new ChatColor(0,  '0');
+        public static readonly ChatColor DARK_BLUE     = new ChatColor(1,  '1');
+        public static readonly ChatColor DARK_GREEN    = new ChatColor(2,  '2');
+        public static readonly ChatColor DARK_AQUA     = new ChatColor(3,  '3');
+        public static readonly ChatColor DARK_RED      = new ChatColor(4,  '4');
+        public static readonly ChatColor DARK_PURPLE   = new ChatColor(5,  '5');
+        public static readonly ChatColor GOLD          = new ChatColor(6,  '6');
+        public static readonly ChatColor GRAY          = new ChatColor(7,  '7');
+        public static readonly ChatColor DARK_GRAY     = new ChatColor(8,  '8');
+        public static readonly ChatColor BLUE          = new ChatColor(9,  '9');
+        public static readonly ChatColor GREEN         = new ChatColor(10, 'a');
+        public static readonly ChatColor AQUA          = new ChatColor(11, 'b');
+        public static readonly ChatColor RED           = new ChatColor(12, 'c');
+        public static readonly ChatColor LIGHT_PURPLE  = new ChatColor(13, 'd');
+        public static readonly ChatColor YELLOW        = new ChatColor(14, 'e');
+        public static readonly ChatColor WHITE         = new ChatColor(15, 'f');
+
+        public static readonly ChatColor OBFUSCATED    = new ChatColor(16, 'k');
+        public static readonly ChatColor BOLD          = new ChatColor(17, 'l');
+        public static readonly ChatColor STRIKETHROUGH = new ChatColor(18, 'm');
+        public static readonly ChatColor UNDERLINE     = new ChatColor(19, 'n');
+        public static readonly ChatColor ITALIC        = new ChatColor(20, 'o');
+        public static readonly ChatColor RESET         = new ChatColor(21, 'r');
+
+        public ChatColor(int id, char value) : base(id, CHARACTER.ToString() + value) { }
     }
 }

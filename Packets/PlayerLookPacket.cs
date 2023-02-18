@@ -1,26 +1,29 @@
-﻿namespace Minecraft.Packets
+﻿using Minecraft.Tools;
+using System.Collections.Generic;
+
+namespace Minecraft.Packets
 {
-    public class PlayerLookPacket : OutgoingPacket
+    public class PlayerLookPacket : IPacket
     {
         private MStream Stream;
 
+        public float Yaw { get; private set; }
+        public float Pitch { get; private set; }
+        public bool OnGround { get; private set; }
+
+        public PacketList Id => PacketList.PLAYER_LOOK;
+        public int PacketLength => 10;
+        public IEnumerable<byte> Raw => Stream.Array;
+
         public PlayerLookPacket(float yaw, float pitch, bool on_ground)
         {
+            (Yaw, Pitch, OnGround) = (yaw, pitch, on_ground);
+
             Stream = new MStream();
-            Stream.WriteByte(0x0C);
-            Stream.Write(yaw);
-            Stream.Write(pitch);
-            Stream.Write(on_ground);
-        }
-
-        public override byte GetId()
-        {
-            return 0x0C;
-        }
-
-        internal override byte[] GetRaw()
-        {
-            return Stream.GetArray();
+            Stream.WriteByte((byte)Id);
+            Stream.Write(Yaw);
+            Stream.Write(Pitch);
+            Stream.Write(OnGround);
         }
     }
 }
