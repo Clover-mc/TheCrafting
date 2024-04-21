@@ -18,11 +18,11 @@ namespace Minecraft.Entities
 
         public void PrintColorizedString(string chatColoredString)
         {
-            if (chatColoredString.IndexOf(ChatColor.CHARACTER) != -1)
+            if (chatColoredString.IndexOf(ChatColor.Character) != -1)
             {
                 for (int i = 0; i < chatColoredString.Length;)
                 {
-                    if (chatColoredString[i] != ChatColor.CHARACTER)
+                    if (chatColoredString[i] != ChatColor.Character)
                     {
                         Console.Write(chatColoredString[i]);
                         i++;

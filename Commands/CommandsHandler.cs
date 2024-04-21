@@ -144,14 +144,14 @@ namespace Minecraft.Commands
                         Console.WriteLine("DDD");
                         break;
                     case "colortest":
-                        sender.SendMessage(ChatColor.GREEN + "Green! " + ChatColor.RESET + ChatColor.STRIKETHROUGH + "Ohhh... " + ChatColor.RESET + ChatColor.BOLD + " I am bold! " + ChatColor.RESET + "I am normal!");
-                        sender.SendMessage(ChatColor.RED + "Red pill " + ChatColor.RESET + "or " + ChatColor.BLUE + "Blue " + ChatColor.RESET + "one?");
+                        sender.SendMessage(ChatColor.Green + "Green! " + ChatColor.Reset + ChatColor.Strikethrough + "Ohhh... " + ChatColor.Reset + ChatColor.Bold + " I am bold! " + ChatColor.Reset + "I am normal!");
+                        sender.SendMessage(ChatColor.Red + "Red pill " + ChatColor.Reset + "or " + ChatColor.Blue + "Blue " + ChatColor.Reset + "one?");
                         break;
                     case "ismyground":
-                        sender.SendMessage((sender.IsOnGround ? ChatColor.GREEN + "Yeah, True" : ChatColor.RED + "Uhhh, False") + ChatColor.RESET);
+                        sender.SendMessage((sender.IsOnGround ? ChatColor.Green + "Yeah, True" : ChatColor.Red + "Uhhh, False") + ChatColor.Reset);
                         break;
                     case "dn":
-                        if (sender is ConsolePlayer) sender.SendMessage(ChatColor.RED + "This command is only for players!");
+                        if (sender is ConsolePlayer) sender.SendMessage(ChatColor.Red + "This command is only for players!");
                         else sender.DisplayName = input[4..];
                         break;
                     default:

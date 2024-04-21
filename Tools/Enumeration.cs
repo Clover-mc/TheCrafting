@@ -1,26 +1,28 @@
-﻿// Thanks eShopOnContainers (https://github.com/dotnet-architecture/eShopOnContainers) for creating this class (https://github.com/dotnet-architecture/eShopOnContainers/blob/dev/src/Services/Ordering/Ordering.Domain/SeedWork/Enumeration.cs)
+﻿// Thanks eShop (https://github.com/dotnet/eShop) for creating this class (https://github.com/dotnet/eShop/blob/main/src/Ordering.Domain/SeedWork/Enumeration.cs)
 
 using System.Collections.Generic;
 using System.Reflection;
 using System;
 using System.Linq;
+using System.ComponentModel.DataAnnotations;
 
 namespace Minecraft.Tools
 {
     public abstract class Enumeration : IComparable
     {
-        public string Name { get; private set; }
+        [Required]
+        public string Name { get; }
 
-        public int Id { get; private set; }
+        public int Id { get; }
 
         protected Enumeration(int id, string name) => (Id, Name) = (id, name);
 
         public override string ToString() => Name;
 
-        public static IEnumerable<T> GetAll<T>() where T : Enumeration =>
-            typeof(T).GetFields(BindingFlags.Public |
-                                BindingFlags.Static |
-                                BindingFlags.DeclaredOnly)
+        public static IEnumerable<T> GetAll<T>() where T : Enumeration
+            => typeof(T).GetFields(BindingFlags.Public |
+                                    BindingFlags.Static |
+                                    BindingFlags.DeclaredOnly)
                         .Select(f => f.GetValue(null))
                         .Cast<T>();
 

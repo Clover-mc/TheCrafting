@@ -47,7 +47,7 @@ namespace Minecraft
             if (IsPlayer)
             {
                 Console.WriteLine("[WORLD] " + Nickname + " left the game");
-                Server.BroadcastMessage(ChatColor.YELLOW + Nickname + " left the game");
+                Server.BroadcastMessage(ChatColor.Yellow + Nickname + " left the game");
             }
 
             Server._connections.RemoveAll(connection => connection.Player.Connection == this);

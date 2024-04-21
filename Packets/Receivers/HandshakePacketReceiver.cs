@@ -53,7 +53,7 @@ namespace Minecraft.Packets.Receivers
                 handler.IsPlayer = true;
 
                 Console.WriteLine("[WORLD] " + player.DisplayName + " joined the game");
-                server.BroadcastMessage(ChatColor.YELLOW + player.DisplayName + " joined the game");
+                server.BroadcastMessage(ChatColor.Yellow + player.DisplayName + " joined the game");
 
                 player.KeepaliveIndex = server.Interval.Create(id =>
                 {
