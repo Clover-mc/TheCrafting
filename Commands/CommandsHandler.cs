@@ -11,20 +11,18 @@ namespace Minecraft.Commands
 {
     public class CommandsHandler
     {
-        private Dictionary<string, ICommand> Commands = new Dictionary<string, ICommand>();
-
-        private static string undercoverNickname = "";
+        readonly Dictionary<string, ICommand> _commands = new();
 
         internal CommandsHandler() { }
 
         public bool RegisterCommand(string label, ICommand handler)
         {
-            return Commands.TryAdd(label, handler);
+            return _commands.TryAdd(label, handler);
         }
 
         public bool UnregisterCommand(string label)
         {
-            return Commands.Remove(label);
+            return _commands.Remove(label);
         }
 
         public void TryParse(string input, Player sender)
@@ -33,7 +31,7 @@ namespace Minecraft.Commands
 
             string label = input.Substring(1, input.Contains(' ') ? input.IndexOf(' ') - 1 : input.Length - 1);
 
-            if (Commands.TryGetValue(label, out ICommand? value))
+            if (_commands.TryGetValue(label, out ICommand? value))
                 value.OnCommand(sender, label, input, Array.Empty<string>());
             else
             {
@@ -71,7 +69,7 @@ namespace Minecraft.Commands
                         sender.Connection.SendPacket(new BlockChangePacket(0, 128, 0, 1, 0));
                         break;
                     case "mstest":
-                        MStream stream = new MStream();
+                        MStream stream = new();
                         stream.Write("LOX");
                         sender.SendMessage(BitConverter.ToString(stream.Array));
                         stream.Write("HOW");
@@ -83,15 +81,6 @@ namespace Minecraft.Commands
                         sender.SendMessage("False True");
                         sender.SendMessage(false.ToString() + " " + true.ToString());
                         break;
-                    case "serialtexttest":
-                        byte[] bytes;
-                        //byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Chat.Builder.Text.JsonText("Hello!", "yellow", true));
-                        //Console.Write(BitConverter.ToString(bytes));
-                        //Console.Write(Encoding.UTF8.GetString(bytes));
-                        break;
-                    case "SerializeTextV2Test":
-                        //Console.Write(new Chat.Builder.Text.JsonText("Wtf u mean?", null, null, true).ToJson());
-                        break;
                     case "dyntest":
                         dynamic sheesh = new
                         {
@@ -100,7 +89,7 @@ namespace Minecraft.Commands
                             extra = new int[5]
                         };
 
-                        bytes = JsonSerializer.SerializeToUtf8Bytes(sheesh);
+                        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(sheesh);
                         sender.SendMessage(BitConverter.ToString(bytes));
                         sender.SendMessage(Encoding.UTF8.GetString(bytes));
                         break;
@@ -129,13 +118,6 @@ namespace Minecraft.Commands
                         bytes = JsonSerializer.SerializeToUtf8Bytes(sheesh);
                         sender.SendMessage(BitConverter.ToString(bytes));
                         sender.SendMessage(Encoding.UTF8.GetString(bytes));
-                        break;
-                    case "eu":
-                        undercoverNickname = input[4..];
-                        sender.SendMessage('"' + undercoverNickname + '"');
-                        break;
-                    case "du":
-                        undercoverNickname = "";
                         break;
                     case "contest":
                         Console.Write("AAA");

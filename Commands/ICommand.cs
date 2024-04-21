@@ -8,5 +8,5 @@ public interface ICommand
 {
     public bool OnCommand(IEntity sender, string label, string raw, string[] args);
 
-    public IList<string> OnTabComplete(IEntity sender, string label, string raw, string[] args);
+    public IList<string>? OnTabComplete(IEntity sender, string label, string raw, string[] args);
 }
