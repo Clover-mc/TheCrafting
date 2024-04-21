@@ -1,36 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <StartupObject>Minecraft.Program</StartupObject>
-    <RootNamespace>Minecraft</RootNamespace>
-    <IsPublishable>False</IsPublishable>
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-    <Authors>TheDearbear</Authors>
-    <Product>Minecraft C# Server</Product>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>none</DebugType>
-    <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
-    <Platforms>AnyCPU;x86</Platforms>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DebugType>portable</DebugType>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>portable</DebugType>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <DebugType>portable</DebugType>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <DebugType>portable</DebugType>
+	  <OutputType>Exe</OutputType>
+	  <TargetFramework>net7.0</TargetFramework>
+	  <ImplicitUsings>disable</ImplicitUsings>
+	  <RootNamespace>Minecraft</RootNamespace>
+	  <Authors>TheDearbear</Authors>
+	  <Product>Minecraft C# Server</Product>
   </PropertyGroup>
 
 </Project>
