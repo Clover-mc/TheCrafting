@@ -57,7 +57,7 @@ namespace Minecraft
         {
             InitVariables(settings);
 
-            Worlds.Add(new World(LevelType.FLAT) { Dimension = Dimension.OVERWORLD });
+            Worlds.Add(new World(LevelType.Flat) { Dimension = Dimension.OVERWORLD });
 
             TcpListener listener = new TcpListener(IPAddress.Any, Config.Port);
             listener.Start();

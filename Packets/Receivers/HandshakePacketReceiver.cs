@@ -45,7 +45,7 @@ namespace Minecraft.Packets.Receivers
 
                 player.DisplayName = player.Nickname = packet.Nickname;
 
-                player.Connection.SendPacket(new LoginRequestPacket(0, LevelType.DEFAULT, GameMode.Creative, Dimension.OVERWORLD, Difficulty.NORMAL, (byte)(server.Config.MaxPlayers > 255 ? 255 : server.Config.MaxPlayers)));
+                player.Connection.SendPacket(new LoginRequestPacket(0, LevelType.Default, GameMode.Creative, Dimension.OVERWORLD, Difficulty.NORMAL, (byte)(server.Config.MaxPlayers > 255 ? 255 : server.Config.MaxPlayers)));
                 player.Connection.SendPacket(new PlayerPositionAndLookPacket(true, 0, 70, 0, 0, 0, 0, false));
                 player.Connection.SendPacket(new MapChunkBulkPacket(49, true, new byte[] { 0 }));
                 player.Connection.SendPacket(new PlayerListItemPacket(player.DisplayName, true, 10));
