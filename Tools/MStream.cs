@@ -150,4 +150,9 @@ public class MStream
     {
         return ReadByte() != 0;
     }
+
+    public void Close()
+    {
+        Stream.Close();
+    }
 }
