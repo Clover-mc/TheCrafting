@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Minecraft.Commands;
+using Minecraft.Configs;
 using Minecraft.Entities;
 using Minecraft.Packets;
 using Minecraft.Packets.Receivers;
@@ -94,7 +95,7 @@ namespace Minecraft
             Files.Initialize();
 
             RegisterCommands();
-            RegisterPackertReceivers();
+            RegisterPacketReceivers();
 
             if (!Settings.DisableConsoleInput)
                 ConWrapper.EnableInput();
@@ -145,10 +146,12 @@ namespace Minecraft
 
         private void RegisterCommands()
         {
-            Commands.RegisterCommand("help", new HelpCommand());
+            Commands.RegisterCommand<HelpCommand>("help");
+            Commands.RegisterCommand<TeleportCommand>("teleport");
+            Commands.RegisterCommand<DisplayNameCommand>("displayname");
         }
 
-        private void RegisterPackertReceivers()
+        private void RegisterPacketReceivers()
         {
             ReceiverStorage.Add(0x00, new KeepalivePacketReceiver());
             ReceiverStorage.Add(0x02, new HandshakePacketReceiver());

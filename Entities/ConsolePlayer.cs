@@ -18,7 +18,7 @@ namespace Minecraft.Entities
 
         public void PrintColorizedString(string chatColoredString)
         {
-            if (chatColoredString.IndexOf(ChatColor.Character) != -1)
+            if (chatColoredString.Contains(ChatColor.Character))
             {
                 for (int i = 0; i < chatColoredString.Length;)
                 {

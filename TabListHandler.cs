@@ -10,35 +10,38 @@ namespace Minecraft
 {
     public class TabListHandler
     {
-        public List<TabListPlayer> Players;
+        public List<TabListPlayer> Players { get; } = new();
+
+        bool _enabled;
         public bool Enabled
         {
             get => _enabled;
             set
             {
-                if (!Enabled && value != Enabled) Start();
+                if (!Enabled && value != Enabled)
+                {
+                    Start();
+                }
                 _enabled = value;
             }
         }
 
-        private bool _enabled;
-        private readonly MinecraftServer Server;
+        readonly MinecraftServer _server;
 
         internal TabListHandler(MinecraftServer server)
         {
-            Players = new List<TabListPlayer>();
-            Server = server;
+            _server = server;
         }
 
         private void Start()
         {
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 while (Enabled)
                 {
                     Update();
 
-                    Task.Delay(1000).GetAwaiter().GetResult();
+                    await Task.Delay(1000);
                 }
             });
         }
@@ -50,13 +53,13 @@ namespace Minecraft
         {
             IEnumerable<TabListPlayer> toRemove = Players.Where(player =>
             {
-                bool notOnServer = !Server.Players.Where(serverPlayer => serverPlayer.Nickname.Equals(player.Nickname, StringComparison.OrdinalIgnoreCase)).Any();
-                bool differentDisplayName = Server.Players.Where(serverPlayer => serverPlayer.DisplayName != player.DisplayName).Any();
+                bool notOnServer = !_server.Players.Where(serverPlayer => serverPlayer.Nickname.Equals(player.Nickname, StringComparison.OrdinalIgnoreCase)).Any();
+                bool differentDisplayName = _server.Players.Where(serverPlayer => serverPlayer.DisplayName != player.DisplayName).Any();
 
                 return notOnServer || differentDisplayName;
             });
 
-            foreach (Player player in Server.Players)
+            foreach (Player player in _server.Players)
                 foreach (TabListPlayer remove in toRemove)
                     if (player.Connection.Connected)
                         player.Connection.SendPacketAsync(new PlayerListItemPacket(remove.DisplayName, false, 0));
@@ -65,10 +68,16 @@ namespace Minecraft
             Players.RemoveAll(player => !player.Dummy);
 
             // and adding them again!
-            foreach (Player player in Server.Players)
-                Players.Add(new TabListPlayer(player.Nickname) { DisplayName = player.DisplayName, IsOnline = player.Connection.Connected, Ping = player.Ping, Dummy = false });
+            foreach (Player player in _server.Players)
+                Players.Add(new TabListPlayer(player.Nickname)
+                {
+                    DisplayName = player.DisplayName,
+                    IsOnline = player.Connection.Connected,
+                    Ping = player.Ping,
+                    Dummy = false
+                });
 
-            foreach (Player player in Server.Players)
+            foreach (Player player in _server.Players)
                 foreach (TabListPlayer tabPlayer in Players)
                     if (player.Connection.Connected)
                         player.Connection.SendPacketAsync(new PlayerListItemPacket(tabPlayer.DisplayName, tabPlayer.IsOnline, tabPlayer.Ping));
@@ -83,8 +92,11 @@ namespace Minecraft
             public bool IsOnline { get; set; }
             internal bool Dummy { get; set; } = true;
 
-            public TabListPlayer() : this("") { }
-            public TabListPlayer(string nickname) => (Nickname, DisplayName, Ping, IsOnline, Dummy) = (nickname, "", 0, true, true);
+            public TabListPlayer()
+                : this(string.Empty) { }
+
+            public TabListPlayer(string nickname)
+                => (Nickname, DisplayName, Ping, IsOnline, Dummy) = (nickname, "", 0, true, true);
         }
     }
 }

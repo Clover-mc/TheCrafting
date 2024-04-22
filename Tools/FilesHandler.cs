@@ -2,92 +2,87 @@
 using System.IO;
 using System.Text;
 
-namespace Minecraft.Tools
+namespace Minecraft.Tools;
+
+public class FilesHandler
 {
-    public class FilesHandler
+    public string Base { get; }
+
+    public string Logs { get; }
+
+    public string Plugins { get; }
+    
+    public string Configs { get; }
+    
+    public string LatestLog { get; }
+
+    public const string LogsDirectory = "logs";
+    public const string PluginsDirectory = "plugins";
+    public const string ConfigsDirectory = "configs";
+    public const string LatestLogFile = "latest.log";
+
+    FileStream? _latestLogStream;
+
+    internal FilesHandler()
     {
-        public string Base { get; }
+        Base = Directory.GetCurrentDirectory();
 
-        public string Logs { get; }
-        public string Plugins { get; }
-        public string Configs { get; }
-        public string LatestLog { get; }
+        Logs = Path.Combine(Base, LogsDirectory);
+        Plugins = Path.Combine(Base, PluginsDirectory);
+        Configs = Path.Combine(Base, ConfigsDirectory);
+        LatestLog = Path.Combine(Logs, LatestLogFile);
+    }
 
-        public const string LogsDirectory = "logs";
-        public const string PluginsDirectory = "plugins";
-        public const string ConfigsDirectory = "configs";
-        public const string LatestLogFile = "latest.log";
-
-        private FileStream? LatestLogStream;
-        private bool IsInitialized;
-
-        internal FilesHandler()
+    internal void Initialize()
+    {
+        if (!Directory.Exists(Logs))
         {
-            Base = Directory.GetCurrentDirectory();
-            Logs = Path.Combine(Base, LogsDirectory);
-            Plugins = Path.Combine(Base, PluginsDirectory);
-            Configs = Path.Combine(Base, ConfigsDirectory);
-            LatestLog = Path.Combine(Logs, LatestLogFile);
+            Directory.CreateDirectory(Logs);
         }
 
-        internal void Initialize()
+        if (File.Exists(LatestLog))
         {
-            if (!Directory.Exists(Logs)) Directory.CreateDirectory(Logs);
-            if (File.Exists(LatestLog))
+            DateTime date = File.GetLastWriteTime(LatestLog);
+            for (int i = 1; ; i++)
             {
-                DateTime date = File.GetLastWriteTime(LatestLog);
-                for (int i = 1; ; i++)
+                string path = Path.Combine(Logs, $"log-{date:MM-dd-yyyy}-{i}.log");
+                if (File.Exists(path))
                 {
-                    string path = Path.Combine(Logs, EffectiveTools.GetDateStamp(date) + "-" + i + ".log");
-                    if (File.Exists(path)) continue;
-                    File.Move(LatestLog, path, true);
-                    break;
+                    continue;
                 }
-            }
-            LatestLogStream = File.Open(LatestLog, FileMode.Create, FileAccess.Write, FileShare.Read);
-            IsInitialized = true;
-        }
 
-        internal void Stop()
-        {
-            if (IsInitialized && LatestLogStream is not null)
-            {
-                IsInitialized = false;
-                LatestLogStream.Close();
-                LatestLogStream = null;
-                File.SetLastWriteTime(LatestLog, DateTime.Now);
+                File.Move(LatestLog, path, true);
+                break;
             }
         }
 
-        public void WriteToLog(byte[] buffer, int offset, int count)
-        {
-            if (IsInitialized && LatestLogStream is not null)
-            {
-                LatestLogStream.Write(buffer, offset, count);
-                LatestLogStream.WriteByte(0x0A);
-                LatestLogStream.Flush();
-            }
-        }
+        _latestLogStream = File.Open(LatestLog, FileMode.Create, FileAccess.Write, FileShare.Read);
+    }
 
-        public void WriteToLogRaw(byte[] buffer, int offset, int count)
+    internal void Stop()
+    {
+        if (_latestLogStream is not null)
         {
-            if (IsInitialized && LatestLogStream is not null)
-            {
-                LatestLogStream.Write(buffer, offset, count);
-                LatestLogStream.Flush();
-            }
+            _latestLogStream.Flush();
+            _latestLogStream.Close();
+            _latestLogStream = null;
         }
+    }
 
-        public void WriteToLog(string str)
-        {
-            byte[] buffer = Encoding.UTF8.GetBytes(str);
-            WriteToLog(buffer, 0, buffer.Length);
-        }
+    public void WriteToLog(byte[] buffer, int offset, int count)
+    {
+        _latestLogStream?.Write(buffer, offset, count);
+    }
 
-        public void WriteToLogRaw(string str)
-        {
-            byte[] buffer = Encoding.UTF8.GetBytes(str);
-            WriteToLogRaw(buffer, 0, buffer.Length);
-        }
+    public void WriteToLog(string str)
+    {
+        byte[] buffer = Encoding.UTF8.GetBytes(str + Environment.NewLine);
+        WriteToLog(buffer, 0, buffer.Length);
+    }
+
+    public void WriteToLogRaw(string str)
+    {
+        byte[] buffer = Encoding.UTF8.GetBytes(str);
+        WriteToLog(buffer, 0, buffer.Length);
     }
 }

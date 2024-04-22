@@ -2,7 +2,9 @@
 using System.Text.Json;
 using System.IO;
 
-namespace Minecraft.Tools
+using Minecraft.Tools;
+
+namespace Minecraft.Configs
 {
     public class ConfigManager
     {

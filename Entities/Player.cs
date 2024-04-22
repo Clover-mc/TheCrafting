@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Diagnostics.CodeAnalysis;
 using Minecraft.Packets;
 
 namespace Minecraft.Entities
@@ -17,7 +17,13 @@ namespace Minecraft.Entities
                 if (Connection is not null) Connection.Nickname = value ?? "";
             }
         }
-        public string DisplayName { get => _displayName; set => _displayName = value ?? Nickname; }
+
+        [AllowNull]
+        public string DisplayName
+        {
+            get => _displayName;
+            set => _displayName = value ?? Nickname;
+        }
         public bool IsOnGround { get; set; }
         public short Ping { get; set; }
         public Location Location

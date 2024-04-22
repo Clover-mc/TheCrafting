@@ -9,4 +9,9 @@
 	  <Product>Minecraft C# Server</Product>
   </PropertyGroup>
 
+  <ItemGroup>
+    <EditorConfigFiles Remove=".editorconfig" />
+	<None Include=".editorconfig" />
+  </ItemGroup>
+
 </Project>

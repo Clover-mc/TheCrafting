@@ -11,7 +11,7 @@ namespace Minecraft.Packets
         public int PacketLength { get; private set; }
         public IEnumerable<byte> Raw => Stream.Array;
 
-        public LoginRequestPacket(int entityID, LevelType level_type, Gamemode gamemode, Dimension dimension, Difficulty difficulty, byte max_players)
+        public LoginRequestPacket(int entityID, LevelType level_type, GameMode gamemode, Dimension dimension, Difficulty difficulty, byte max_players)
         {
             Stream = new MStream();
             Stream.WriteByte((byte)Id);

@@ -1,13 +1,10 @@
-﻿namespace Minecraft
-{
-    public enum Gamemode : byte
-    {
-        SURVIVAL  = 0,
-        CREATIVE  = 1,
-        ADVENTURE = 2,
+﻿namespace Minecraft;
 
-        SURVIVAL_HARDCORE  = 0b1000,
-        CREATIVE_HARDCORE  = 0b1001,
-        ADVENTURE_HARDCORE = 0b1010
-    }
+public enum GameMode : byte
+{
+    Survival  = 0,
+    Creative  = 1,
+    Adventure = 2,
+
+    HardcoreFlag  = 1 << 3
 }

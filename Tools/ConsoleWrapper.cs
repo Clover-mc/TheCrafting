@@ -5,22 +5,24 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Minecraft.Commands;
-
 namespace Minecraft.Tools
 {
     public class ConsoleWrapper : TextReader
     {
         public class LogLevel : Enumeration
         {
-            public static readonly LogLevel INFO    = new LogLevel(0, "INFO");
-            public static readonly LogLevel WARNING = new LogLevel(1, "WARNING");
-            public static readonly LogLevel ERROR   = new LogLevel(2, "ERROR");
+            public static LogLevel Info { get; } = new(0, "Info");
+            public static LogLevel Warning { get; } = new(1, "Warning");
+            public static LogLevel Error { get; } = new(2, "Error");
 
-            public LogLevel(int id, string value) : base(id, value) { }
+            public LogLevel(int id, string value)
+                : base(id, value) { }
         }
+
         public bool InputEnabled { get; private set; }
+        
         public string Input { get; private set; }
+        
         public ConsoleWriter Writer { get; private set; }
 
         private readonly MinecraftServer Server;
@@ -59,13 +61,13 @@ namespace Minecraft.Tools
             public override void Write(long value) => Write(value.ToString());
             public override void Write(uint value) => Write(value.ToString());
             public override void Write(ulong value) => Write(value.ToString());
-            public override void Write(string? value) => Write(value ?? "", LogLevel.INFO);
+            public override void Write(string? value) => Write(value ?? "", LogLevel.Info);
 
-            public static void Write(ConsoleColor color, string value) => Write(color, value, LogLevel.INFO);
+            public static void Write(ConsoleColor color, string value) => Write(color, value, LogLevel.Info);
             public static void Write(string value, LogLevel level) => Write(Console.ForegroundColor, value, level);
             public static void Write(ConsoleColor color, string value, LogLevel level)
             {
-                if (server.ConWrapper.DoNewLine) EffectiveTools.ClearLineAndGoTo(Console.CursorTop);
+                if (server.ConWrapper.DoNewLine) ClearLineAndGoTo(Console.CursorTop);
 
                 if (value is not null)
                 {
@@ -74,7 +76,7 @@ namespace Minecraft.Tools
                     string message = value;
                     if (server.ConWrapper.DoNewLine)
                     {
-                        message = "[" + EffectiveTools.GetTimeStamp() + "] [" + EffectiveTools.GetThreadName(Thread.CurrentThread) + "/" + level.Name + "]: " + message;
+                        message = $"[{DateTime.Now:HH:mm:ss}] [{level.Name}]: {message}";
                         server.ConWrapper.DoNewLine = false;
                     }
 
@@ -89,13 +91,13 @@ namespace Minecraft.Tools
 
             public static void AllocLine()
             {
-                if (server.ConWrapper.DoNewLine) EffectiveTools.ClearLineAndGoTo(Console.CursorTop);
+                if (server.ConWrapper.DoNewLine) ClearLineAndGoTo(Console.CursorTop);
 
                 if (!server.ConWrapper.DoNewLine) Console.Write('\n');
 
                 server.ConWrapper.DoNewLine = false;
 
-                string message = "[" + EffectiveTools.GetTimeStamp() + "] [" + EffectiveTools.GetThreadName(Thread.CurrentThread) + "/" + LogLevel.INFO.Name + "]: ";
+                string message = $"[{DateTime.Now:HH:mm:ss}] [{LogLevel.Info.Name}]: ";
                 server.Files.WriteToLogRaw(message);
                 Writer.Write(message);
 
@@ -103,14 +105,14 @@ namespace Minecraft.Tools
             }
 
             public static void WriteError(Exception e) => WriteError(e.ToString());
-            public static void WriteError(string value) => WriteLine(ConsoleColor.Red, value, LogLevel.ERROR);
+            public static void WriteError(string value) => WriteLine(ConsoleColor.Red, value, LogLevel.Error);
 
             public override void WriteLine() => base.WriteLine();
-            public override void WriteLine(string? value) => WriteLine(value ?? "", LogLevel.INFO);
+            public override void WriteLine(string? value) => WriteLine(value ?? "", LogLevel.Info);
             public static void WriteLine(string value, LogLevel level) => WriteLine(Console.ForegroundColor, value, level);
             public static void WriteLine(ConsoleColor color, string value, LogLevel level)
             {
-                if (server.ConWrapper.DoNewLine) EffectiveTools.ClearLineAndGoTo(Console.CursorTop);
+                if (server.ConWrapper.DoNewLine) ClearLineAndGoTo(Console.CursorTop);
 
                 if (value is not null)
                 {
@@ -122,7 +124,7 @@ namespace Minecraft.Tools
                         Writer.WriteLine();
                     }
 
-                    string message = "[" + EffectiveTools.GetTimeStamp() + "] [" + EffectiveTools.GetThreadName(Thread.CurrentThread) + "/" + level.Name + "]: " + value;
+                    string message = $"[{DateTime.Now:HH:mm:ss}] [{level.Name}]: {value}";
                     server.Files.WriteToLog(message);
                     Writer.WriteLine(message);
 
@@ -140,6 +142,13 @@ namespace Minecraft.Tools
                 Writer.WriteLine();
 
                 Console.CursorTop = top; Console.CursorLeft = left;
+            }
+
+            public static void ClearLineAndGoTo(int line)
+            {
+                Console.SetCursorPosition(0, line);
+                Writer.Write(new string(' ', Console.WindowWidth));
+                Console.SetCursorPosition(0, line);
             }
 
             public override Encoding Encoding { get => Encoding.UTF8; }

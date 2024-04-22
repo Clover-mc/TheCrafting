@@ -2,48 +2,55 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Minecraft.Tools
+namespace Minecraft.Tools;
+
+public class IntervalStorage
 {
-    public class IntervalStorage
+    ulong _index = 0;
+    readonly Dictionary<ulong, bool> _storage = new();
+
+    public ulong Create(Action<ulong> func, TimeSpan interval, bool instantDelay = false)
     {
-        private ulong Index;
-        private Dictionary<ulong, bool> Storage;
-
-        public IntervalStorage()
+        ulong given = _index++;
+        _storage.Add(given, true);
+        
+        Task.Run(async () =>
         {
-            Index = 0;
-            Storage = new Dictionary<ulong, bool>();
-        }
-
-        public ulong Create(Action<ulong> func, TickSpan interval, bool instantDelay = false) => Create(func, interval.TimeSpan, instantDelay);
-        public ulong Create(Action<ulong> func, TimeSpan interval, bool instantDelay = false)
-        {
-            ulong given = Index;
-            Storage.Add(given, true);
-            Task.Run(async () =>
+            if (instantDelay)
             {
-                if (instantDelay) await Task.Delay(interval);
-                while (IsWorking(given))
+                await Task.Delay(interval);
+            }
+
+            while (IsWorking(given))
+            {
+                try
                 {
                     func?.Invoke(given);
-                    await Task.Delay(interval);
                 }
-            });
-            Index++;
-            return given;
-        }
+                catch (Exception ex)
+                {
+                    ConsoleWrapper.ConsoleWriter.WriteError(ex);
+                }
 
-        public bool IsWorking(ulong index)
-        {
-            return Storage.ContainsKey(index) && Storage[index];
-        }
-
-        public void Cancel(ulong index)
-        {
-            if (Storage.ContainsKey(index))
-            {
-                Storage[index] = false;
+                await Task.Delay(interval);
             }
+
+            _storage.Remove(given);
+        });
+        
+        return given;
+    }
+
+    public bool IsWorking(ulong index)
+    {
+        return _storage.ContainsKey(index) && _storage[index];
+    }
+
+    public void Cancel(ulong index)
+    {
+        if (_storage.ContainsKey(index))
+        {
+            _storage[index] = false;
         }
     }
 }

@@ -1,0 +1,8 @@
+# Remove the line below if you want to inherit .editorconfig settings from higher directories
+root = true
+
+[*.{cs,vb}]
+indent_size = 4
+end_of_line = lf
+indent_style = space
+insert_final_newline = true
