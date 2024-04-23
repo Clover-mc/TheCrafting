@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using Minecraft.Packets;
+using Serilog;
 
 namespace Minecraft
 {
@@ -27,7 +28,11 @@ namespace Minecraft
         {
             byte[] packet_raw = packet.Raw.ToArray();
 
-            if (Server.Settings.ShowOutgoing) Console.WriteLine("\nBINARY(HEX): " + BitConverter.ToString(packet_raw).Replace('-', ' ') + "\nUTF8: " + Encoding.UTF8.GetString(packet_raw));
+            if (Server.Settings.ShowOutgoing)
+            {
+                Log.Debug("BINARY(HEX): " + BitConverter.ToString(packet_raw).Replace('-', ' '));
+                Log.Debug("UTF8: " + Encoding.UTF8.GetString(packet_raw));
+            }
 
             return Client.Send(packet_raw);
         }
@@ -36,22 +41,27 @@ namespace Minecraft
         {
             byte[] packetRaw = packet.Raw.ToArray();
 
-            if (Server.Settings.ShowOutgoing) Console.WriteLine("\nBINARY(HEX): " + BitConverter.ToString(packetRaw).Replace('-', ' ') + "\nUTF8: " + Encoding.UTF8.GetString(packetRaw));
+            if (Server.Settings.ShowOutgoing)
+            {
+                Log.Debug("BINARY(HEX): " + BitConverter.ToString(packetRaw).Replace('-', ' '));
+                Log.Debug("UTF8: " + Encoding.UTF8.GetString(packetRaw));
+            }
 
             return Client.SendAsync(packetRaw, SocketFlags.None);
         }
 
         public void Close()
         {
-            Console.WriteLine("Disconnected: " + Client.RemoteEndPoint);
-            if (IsPlayer)
-            {
-                Console.WriteLine("[WORLD] " + Nickname + " left the game");
-                Server.BroadcastMessage(ChatColor.Yellow + Nickname + " left the game");
-            }
+            Log.Debug("Disconnected: " + Client.RemoteEndPoint);
 
             Server._connections.RemoveAll(connection => connection.Player.Connection == this);
             Client.Close();
+
+            if (IsPlayer)
+            {
+                Log.Information("[WORLD] " + Nickname + " left the game");
+                Server.BroadcastMessage($"{ChatColor.Yellow}{Nickname} left the game");
+            }
         }
 
         internal byte[] Receive()

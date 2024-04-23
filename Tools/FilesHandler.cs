@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 
 namespace Minecraft.Tools;
 
@@ -21,7 +20,7 @@ public class FilesHandler
     public const string ConfigsDirectory = "configs";
     public const string LatestLogFile = "latest.log";
 
-    FileStream? _latestLogStream;
+    bool _initialized;
 
     internal FilesHandler()
     {
@@ -33,8 +32,13 @@ public class FilesHandler
         LatestLog = Path.Combine(Logs, LatestLogFile);
     }
 
-    internal void Initialize()
+    public void Initialize()
     {
+        if (_initialized)
+        {
+            return;
+        }
+
         if (!Directory.Exists(Logs))
         {
             Directory.CreateDirectory(Logs);
@@ -56,33 +60,6 @@ public class FilesHandler
             }
         }
 
-        _latestLogStream = File.Open(LatestLog, FileMode.Create, FileAccess.Write, FileShare.Read);
-    }
-
-    internal void Stop()
-    {
-        if (_latestLogStream is not null)
-        {
-            _latestLogStream.Flush();
-            _latestLogStream.Close();
-            _latestLogStream = null;
-        }
-    }
-
-    public void WriteToLog(byte[] buffer, int offset, int count)
-    {
-        _latestLogStream?.Write(buffer, offset, count);
-    }
-
-    public void WriteToLog(string str)
-    {
-        byte[] buffer = Encoding.UTF8.GetBytes(str + Environment.NewLine);
-        WriteToLog(buffer, 0, buffer.Length);
-    }
-
-    public void WriteToLogRaw(string str)
-    {
-        byte[] buffer = Encoding.UTF8.GetBytes(str);
-        WriteToLog(buffer, 0, buffer.Length);
+        _initialized = true;
     }
 }

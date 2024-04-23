@@ -1,8 +1,7 @@
-﻿using System.Text.Json.Nodes;
-using System.Text.Json;
+﻿using Serilog;
 using System.IO;
-
-using Minecraft.Tools;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Minecraft.Configs
 {
@@ -28,7 +27,7 @@ namespace Minecraft.Configs
 
             try
             {
-                JsonObject config = JsonNode.Parse(text).AsObject();
+                JsonObject config = JsonNode.Parse(text)!.AsObject();
 
                 Motd = GetString(config, "motd", "A Minecraft Server");
                 Port = (ushort)GetInteger(config, "port", 25565);
@@ -41,56 +40,56 @@ namespace Minecraft.Configs
             }
             catch (JsonException e)
             {
-                ConsoleWrapper.ConsoleWriter.WriteError(e);
+                Log.Error(e, "Unable to parse config file!");
             }
         }
 
         private string GetString(JsonObject node, string name, string defaultValue)
         {
-            if (!node.TryGetPropertyValue(name, out JsonNode value) || value.GetValue<string>() is null)
+            if (!node.TryGetPropertyValue(name, out JsonNode? value) || value?.GetValue<string>() is null)
             {
                 node[name] = defaultValue;
                 value = node[name];
                 ConfigChanged = true;
             }
 
-            return value.GetValue<string>();
+            return value?.GetValue<string>() ?? defaultValue;
         }
 
         private int GetInteger(JsonObject node, string name, int defaultValue)
         {
-            if (!node.TryGetPropertyValue(name, out JsonNode value))
+            if (!node.TryGetPropertyValue(name, out JsonNode? value))
             {
                 node[name] = defaultValue;
                 value = node[name];
                 ConfigChanged = true;
             }
 
-            return value.GetValue<int>();
+            return value?.GetValue<int>() ?? defaultValue;
         }
 
         private bool GetBoolean(JsonObject node, string name, bool defaultValue)
         {
-            if (!node.TryGetPropertyValue(name, out JsonNode value))
+            if (!node.TryGetPropertyValue(name, out JsonNode? value))
             {
                 node[name] = defaultValue;
                 value = node[name];
                 ConfigChanged = true;
             }
 
-            return value.GetValue<bool>();
+            return value?.GetValue<bool>() ?? defaultValue;
         }
 
         private long GetLong(JsonObject node, string name, long defaultValue)
         {
-            if (!node.TryGetPropertyValue(name, out JsonNode value))
+            if (!node.TryGetPropertyValue(name, out JsonNode? value))
             {
                 node[name] = defaultValue;
                 value = node[name];
                 ConfigChanged = true;
             }
 
-            return value.GetValue<long>();
+            return value?.GetValue<long>() ?? defaultValue;
         }
     }
 }

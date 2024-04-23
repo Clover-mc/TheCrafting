@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Linq;
 
 namespace Minecraft;
@@ -15,9 +16,19 @@ internal class Program
     /// <returns>Result code</returns>
     static int Main(string[] args)
     {
-        MinecraftServer server = new MinecraftServer();
+        var server = new MinecraftServer();
+
+        server.Files.Initialize();
+
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Console()
+            .WriteTo.File(server.Files.LatestLog)
+            .CreateLogger();
 
         server.Start(ArgsToSettings(args));
+
+        Log.CloseAndFlush();
 
         return 0;
     }
@@ -41,8 +52,7 @@ internal class Program
         return new ServerSettings()
         {
             ShowIncoming = Contains(args, "-I", "--in", "--incoming"),
-            ShowOutgoing = Contains(args, "-O", "--out", "--outgoing"),
-            DisableConsoleInput = Contains(args, "-D", "--disable-console-input")
+            ShowOutgoing = Contains(args, "-O", "--out", "--outgoing")
         };
     }
 }

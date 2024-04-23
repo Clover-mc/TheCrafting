@@ -6,14 +6,24 @@ using System.Text;
 
 using Minecraft.Entities;
 using Minecraft.Packets;
-using Minecraft.Tools;
+using Serilog;
 
 namespace Minecraft
 {
     public class ConnectionHandler
     {
-        public bool Connected { get => Player.Connection.Connected; }
-        public bool IsPlayer { get => Player.Connection.IsPlayer; internal set => Player.Connection.IsPlayer = value; }
+        public bool Connected { get => Player.Connection?.Connected ?? false; }
+        public bool IsPlayer
+        {
+            get => Player.Connection?.IsPlayer ?? true;
+            internal set
+            {
+                if (Player.Connection is not null)
+                {
+                    Player.Connection.IsPlayer = value;
+                }
+            }
+        }
         public Player Player { get; private set; }
         internal ulong TickId { get; set; }
         private readonly MinecraftServer Server;
@@ -39,10 +49,10 @@ namespace Minecraft
                     rawPacket.ElementAt(0) != 0x0B && rawPacket.ElementAt(0) != 0x0D &&
                     rawPacket.ElementAt(0) != 0x0C && rawPacket.ElementAt(0) != 0xC9)
                 {
-                    Console.WriteLine("==New incoming packet==");
-                    Console.WriteLine("RAW: " + BitConverter.ToString(rawPacket.ToArray(), 0, rawPacket.Count()).Replace('-', ' '));
-                    Console.WriteLine("STRING: " + Encoding.UTF8.GetString(rawPacket.ToArray()));
-                    Console.WriteLine("=======================");
+                    Log.Debug("==New incoming packet==");
+                    Log.Debug("RAW: " + BitConverter.ToString(rawPacket.ToArray(), 0, rawPacket.Count()).Replace('-', ' '));
+                    Log.Debug("STRING: " + Encoding.UTF8.GetString(rawPacket.ToArray()));
+                    Log.Debug("=======================");
                 }
 
                 while (rawPacket.Any()) rawPacket = Handle(rawPacket);
@@ -60,7 +70,7 @@ namespace Minecraft
             catch(Exception e)
             {
                 Player.Disconnect("Internal Server Error");
-                ConsoleWrapper.ConsoleWriter.WriteError(e);
+                Log.Error(e, "An error was thrown while processing packet! Caused by: {Nickname} (EID: {EntityId})", Player.Nickname, Player.EntityId);
             }
 
             return Array.Empty<byte>();

@@ -8,7 +8,7 @@ public class TeleportCommand : ICommand
 {
     public bool OnCommand(IEntity sender, string label, string raw, string[] args)
     {
-        if (sender is not Player player || player is ConsolePlayer)
+        if (sender is not Player player || player.Connection is null || player is ConsolePlayer)
         {
             return false;
         }

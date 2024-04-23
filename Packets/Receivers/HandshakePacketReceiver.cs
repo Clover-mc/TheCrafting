@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Minecraft.Entities;
+using Serilog;
 
 namespace Minecraft.Packets.Receivers
 {
@@ -36,8 +37,8 @@ namespace Minecraft.Packets.Receivers
 
             if (handler.Connected)
             {
-                IEnumerable<Player> simillar = server.Players.Where(playerList => playerList.Nickname.ToLower() == player.Nickname.ToLower());
-                if (simillar.Any())
+                bool similar = server.Players.Any(playerList => playerList.Nickname.Equals(player.Nickname, StringComparison.OrdinalIgnoreCase));
+                if (similar)
                 {
                     player.Disconnect("You logged in from another location");
                     return Array.Empty<byte>();
@@ -45,19 +46,19 @@ namespace Minecraft.Packets.Receivers
 
                 player.DisplayName = player.Nickname = packet.Nickname;
 
-                player.Connection.SendPacket(new LoginRequestPacket(0, LevelType.Default, GameMode.Creative, Dimension.OVERWORLD, Difficulty.NORMAL, (byte)(server.Config.MaxPlayers > 255 ? 255 : server.Config.MaxPlayers)));
-                player.Connection.SendPacket(new PlayerPositionAndLookPacket(true, 0, 70, 0, 0, 0, 0, false));
-                player.Connection.SendPacket(new MapChunkBulkPacket(49, true, new byte[] { 0 }));
-                player.Connection.SendPacket(new PlayerListItemPacket(player.DisplayName, true, 10));
+                player.Connection?.SendPacket(new LoginRequestPacket(0, LevelType.Default, GameMode.Creative, Dimension.OVERWORLD, Difficulty.NORMAL, (byte)(server.Config.MaxPlayers > 255 ? 255 : server.Config.MaxPlayers)));
+                player.Connection?.SendPacket(new PlayerPositionAndLookPacket(true, 0, 70, 0, 0, 0, 0, false));
+                player.Connection?.SendPacket(new MapChunkBulkPacket(49, true, new byte[] { 0 }));
+                player.Connection?.SendPacket(new PlayerListItemPacket(player.DisplayName, true, 10));
 
                 handler.IsPlayer = true;
 
-                Console.WriteLine("[WORLD] " + player.DisplayName + " joined the game");
+                Log.Information("[WORLD] " + player.DisplayName + " joined the game");
                 server.BroadcastMessage(ChatColor.Yellow + player.DisplayName + " joined the game");
 
                 player.KeepaliveIndex = server.Interval.Create(id =>
                 {
-                    if (player.Connection.Connected)
+                    if (player.Connection?.Connected == true)
                     {
                         if (player.KeepalivePending.Count >= 12)
                         {
@@ -65,7 +66,7 @@ namespace Minecraft.Packets.Receivers
                             server.Interval.Cancel(id);
                             return;
                         }
-                        KeepalivePacket packet = new KeepalivePacket();
+                        var packet = new KeepalivePacket();
                         player.KeepalivePending.Add(new KeepalivePacket.KeepaliveMesssage { Packet = packet, Time = DateTime.Now });
                         player.Connection.SendPacket(packet);
                     }
@@ -85,7 +86,7 @@ namespace Minecraft.Packets.Receivers
             else return Array.Empty<byte>();
         }
 
-        private void StartTicking(ConnectionHandler handler, MinecraftServer server)
+        static void StartTicking(ConnectionHandler handler, MinecraftServer server)
         {
             handler.TickId = server.Interval.Create(id =>
             {
@@ -95,12 +96,12 @@ namespace Minecraft.Packets.Receivers
                     return;
                 }
 
-                foreach (Player player in server.Worlds[0].Entities.Where(e => e.Value is Player).Select(e => (Player)e.Value).Where(p => p.Connection.Connected && p.EntityId != handler.Player.EntityId))
-                    player.Connection.SendPacketAsync(new PlayerPositionAndLookPacket(true, player.IsOnGround, player.Location.Y + 0.2, player.Location));
+                foreach (Player player in server.Worlds[0].Entities.OfType<Player>().Where(p => p.Connection?.Connected == true && p.EntityId != handler.Player.EntityId))
+                    player.Connection?.SendPacketAsync(new PlayerPositionAndLookPacket(true, player.IsOnGround, player.Location.Y + 0.2, player.Location));
             }, TimeSpan.FromMicroseconds(1000 / 20));
         }
 
-        private static byte[] GenerateChunks()
+        static byte[] GenerateChunks()
         {
             byte[] full = new byte[602112];
 

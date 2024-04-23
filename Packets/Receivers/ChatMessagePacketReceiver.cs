@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Minecraft.Entities;
+using Serilog;
 
 namespace Minecraft.Packets.Receivers
 {
@@ -11,17 +10,20 @@ namespace Minecraft.Packets.Receivers
 
         public IEnumerable<byte> Process(ConnectionHandler handler, MinecraftServer server, IEnumerable<byte> rawPacket)
         {
-            Player player = handler.Player;
-            ChatMessagePacket packet = new ChatMessagePacket(rawPacket);
+            var player = handler.Player;
+            var packet = new ChatMessagePacket(rawPacket);
 
             packet.Text = packet.Text.Trim();
 
-            if (packet.Text.StartsWith('/')) server.Commands.TryParse(packet.Text, player);
+            if (packet.Text.StartsWith('/'))
+            {
+                server.Commands.TryParse(packet.Text, player);
+            }
             else
             {
-                string message = '<' + handler.Player.DisplayName + "> " + packet.Text;
+                string message = $"<{handler.Player.DisplayName}> {packet.Text}";
 
-                Console.WriteLine(message);
+                Log.Information(message);
                 server.BroadcastMessage(message);
             }
 

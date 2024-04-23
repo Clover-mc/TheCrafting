@@ -16,7 +16,7 @@ public class HelpCommand : ICommand
 
         var sb = new StringBuilder()
             .AppendLine("== Help")
-            .AppendLine(" | exit - shutdown (force) server")
+            .AppendLine(" | stop - shutdown server")
             .AppendLine(" | help - show this text")
             .AppendLine(" | teleport - teleport to coordinates")
             .Append(" | displayname - change display name");

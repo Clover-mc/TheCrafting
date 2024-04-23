@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Minecraft.Entities
+﻿namespace Minecraft.Entities
 {
     public interface IEntity
     {

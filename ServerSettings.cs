@@ -14,9 +14,4 @@ public class ServerSettings
     /// Every outgoing network packet will be printed to console when true
     /// </summary>
     public bool ShowOutgoing { get; init; }
-
-    /// <summary>
-    /// Console command prompt will not be enabled on startup when true
-    /// </summary>
-    public bool DisableConsoleInput { get; init; }
 }

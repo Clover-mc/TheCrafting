@@ -61,7 +61,7 @@ namespace Minecraft
 
             foreach (Player player in _server.Players)
                 foreach (TabListPlayer remove in toRemove)
-                    if (player.Connection.Connected)
+                    if (player.Connection?.Connected == true)
                         player.Connection.SendPacketAsync(new PlayerListItemPacket(remove.DisplayName, false, 0));
 
             // Removing all real players from list ...
@@ -72,14 +72,14 @@ namespace Minecraft
                 Players.Add(new TabListPlayer(player.Nickname)
                 {
                     DisplayName = player.DisplayName,
-                    IsOnline = player.Connection.Connected,
+                    IsOnline = player.Connection?.Connected == true,
                     Ping = player.Ping,
                     Dummy = false
                 });
 
             foreach (Player player in _server.Players)
                 foreach (TabListPlayer tabPlayer in Players)
-                    if (player.Connection.Connected)
+                    if (player.Connection?.Connected == true)
                         player.Connection.SendPacketAsync(new PlayerListItemPacket(tabPlayer.DisplayName, tabPlayer.IsOnline, tabPlayer.Ping));
         }
 

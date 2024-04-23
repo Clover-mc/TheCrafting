@@ -8,21 +8,24 @@ namespace Minecraft.Entities
     public class Player : IEntity
     {
         public uint EntityId { get; set; }
-        public PlayerConnection Connection { get; private set; }
+        public PlayerConnection? Connection { get; private set; }
         public string Nickname {
             get => _nickname;
             internal set
             {
                 _nickname = value ?? "";
-                if (Connection is not null) Connection.Nickname = value ?? "";
+                if (Connection is not null)
+                {
+                    Connection.Nickname = value ?? "";
+                }
             }
         }
 
         [AllowNull]
         public string DisplayName
         {
-            get => _displayName;
-            set => _displayName = value ?? Nickname;
+            get => _displayName ?? Nickname;
+            set => _displayName = value;
         }
         public bool IsOnGround { get; set; }
         public short Ping { get; set; }
@@ -41,48 +44,52 @@ namespace Minecraft.Entities
         /// <summary>
         /// Keepalive packets that player didn't answer
         /// </summary>
-        internal List<KeepalivePacket.KeepaliveMesssage> KeepalivePending;
+        internal List<KeepalivePacket.KeepaliveMesssage> KeepalivePending = new();
 
-        private string _nickname;
-        private string _displayName;
-        private Location _location;
+        string _nickname;
+        string? _displayName;
+        Location _location = new();
 
 
         internal Player() : base()
         {
             Connection = null;
-            Nickname = "DummyPlayer";
-            DisplayName = "Dummy Player";
-            Location = new Location();
-
-            KeepalivePending = new List<KeepalivePacket.KeepaliveMesssage>();
+            _nickname = "DummyPlayer";
+            _displayName = "Dummy Player";
         }
 
-        internal Player(PlayerConnection connection, string nickname)
+        internal Player(PlayerConnection? connection, string nickname)
         {
             Connection = connection;
-            Nickname = nickname;
-            DisplayName = nickname;
-
-            KeepalivePending = new List<KeepalivePacket.KeepaliveMesssage>();
+            _nickname = nickname;
         }
 
         public virtual void SendMessage(string message)
         {
-            Connection.SendPacket(new ChatMessagePacket(message));
+            Connection?.SendPacket(new ChatMessagePacket(message));
         }
 
         public virtual void Disconnect(string message = "Disconnected.")
         {
-            Connection.SendPacket(new DisconnectKickPacket(message));
-            Connection.Close();
+            if (Connection is not null && Connection.Connected)
+            {
+                Connection.SendPacket(new DisconnectKickPacket(message));
+                Connection.Close();
 
-            foreach (Player player in Connection.Server.Players)
-                player.Connection.SendPacketAsync(new DestroyEntityPacket(EntityId));
+                foreach (Player player in Connection.Server.Players)
+                    player.Connection?.SendPacketAsync(new DestroyEntityPacket(EntityId));
+            }
+
+            Connection = null;
         }
 
         internal byte[] ReceivePacket()
         {
+            if (Connection is null)
+            {
+                throw new InvalidOperationException($"Property '{nameof(Connection)}' is not assigned!");
+            }
+
             return Connection.Receive();
         }
 

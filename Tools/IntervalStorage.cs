@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -29,7 +30,7 @@ public class IntervalStorage
                 }
                 catch (Exception ex)
                 {
-                    ConsoleWrapper.ConsoleWriter.WriteError(ex);
+                    Log.Error(ex, "Async task failed!");
                 }
 
                 await Task.Delay(interval);

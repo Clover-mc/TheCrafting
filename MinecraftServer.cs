@@ -16,41 +16,44 @@ using Minecraft.Entities;
 using Minecraft.Packets;
 using Minecraft.Packets.Receivers;
 using Minecraft.Tools;
+using Serilog;
 
 namespace Minecraft
 {
     public class MinecraftServer
     {
         public DateTime StartTime { get; private set; }
-        public ServerSettings Settings { get; private set; }
+        public ServerSettings Settings { get; private set; } = new();
         public bool Enabled { get; private set; }
 
         public IReadOnlyList<ConnectionHandler> Connections { get => _connections.AsReadOnly(); }
-        public IReadOnlyList<Player> Players { get => Worlds.SelectMany(w => w.Entities.Where(kv => kv.Value is Player && ((kv.Value as Player)?.Connection.Connected ?? false)).Select(kv => (Player)kv.Value)).ToList().AsReadOnly(); }
+        public IReadOnlyList<Player> Players
+        {
+            get => Worlds.SelectMany(w => w.Entities
+                    .Select(kv => kv.Value)
+                    .OfType<Player>()
+                    .Where(player => player.Connection?.Connected == true))
+                .ToList()
+                .AsReadOnly();
+        }
 
         #region Internal (Dirty) stuff
-        public FilesHandler Files { get; private set; } = new FilesHandler();
-        public IntervalStorage Interval { get; private set; } = new IntervalStorage();
-        public ConfigManager Config { get; private set; } = new ConfigManager("server.properties.json");
-        public PacketReceiverStorage ReceiverStorage { get; private set; } = new PacketReceiverStorage();
-        public ConsoleWrapper ConWrapper { get; private set; }
-        public ConsolePlayer ConsolePlayer { get; private set; }
+        public FilesHandler Files { get; } = new();
+        public IntervalStorage Interval { get; } = new();
+        public ConfigManager Config { get; } = new("server.properties.json");
+        public PacketReceiverStorage ReceiverStorage { get; } = new();
+        public ConsolePlayer ConsolePlayer { get; } = new();
         #endregion
 
-        public CommandsHandler Commands { get; private set; }
-        public List<World> Worlds { get; private set; }
-        public TabListHandler TabList { get; private set; }
+        public CommandsHandler Commands { get; } = new();
+        public List<World> Worlds { get; } = new();
+        public TabListHandler TabList { get; }
 
-        internal List<ConnectionHandler> _connections = new List<ConnectionHandler>();
+        internal List<ConnectionHandler> _connections = new();
 
         public MinecraftServer()
         {
-            ConWrapper = new ConsoleWrapper(this);
-            ConsolePlayer = new ConsolePlayer(this);
-            Commands = new CommandsHandler();
-            TabList  = new TabListHandler(this) { Enabled = true };
-            Settings = new ServerSettings();
-            Worlds   = new List<World>();
+            TabList  = new TabListHandler(this);
         }
 
         public void Start(ServerSettings settings)
@@ -59,27 +62,32 @@ namespace Minecraft
 
             Worlds.Add(new World(LevelType.Flat) { Dimension = Dimension.OVERWORLD });
 
-            TcpListener listener = new TcpListener(IPAddress.Any, Config.Port);
+            var listener = new TcpListener(IPAddress.Any, Config.Port);
             listener.Start();
+
             Enabled = true;
+            TabList.Enabled = true;
 
             ListenClients(listener);
         }
 
         public void Stop()
         {
-            Enabled = false;
-            Console.Write("Stopping server...");
-            Files.Stop();
+            Log.Information("Stopping server...");
+            TabList.Enabled = false;
 
-            Console.In.Close();
-            Console.Out.Close();
+            foreach (var player in Players)
+            {
+                player.Disconnect("Server shutdown.");
+            }
+
+            Enabled = false;
         }
 
         public void BroadcastMessage(string message)
         {
             foreach (Player player in Players)
-                if (player.Connection.Connected)
+                if (player.Connection?.Connected == true)
                     player.SendMessage(message);
         }
 
@@ -88,17 +96,12 @@ namespace Minecraft
             StartTime = DateTime.Now;
             Settings = settings;
 
-            Console.SetOut(ConWrapper.Writer);
-            Console.SetIn(ConWrapper);
             Thread.CurrentThread.Name = "Main";
 
             Files.Initialize();
 
             RegisterCommands();
             RegisterPacketReceivers();
-
-            if (!Settings.DisableConsoleInput)
-                ConWrapper.EnableInput();
         }
 
         private void ListenClients(TcpListener listener)
@@ -106,9 +109,17 @@ namespace Minecraft
             // Bind the socket to the local endpoint and listen for incoming connections.  
             try
             {
-                Console.WriteLine("Ready for connection (" + Math.Round((DateTime.Now - StartTime).TotalSeconds, 2).ToString().Replace(',', '.') + "s)");
+                Log.Information("Ready for connection (" + Math.Round((DateTime.Now - StartTime).TotalSeconds, 2).ToString().Replace(',', '.') + "s)");
                 while (Enabled)
                 {
+                    while (!listener.Pending())
+                    {
+                        if (!Enabled)
+                        {
+                            return;
+                        }
+                    }
+
                     // Start for listening connections
                     TcpClient client = listener.AcceptTcpClient();
 
@@ -118,16 +129,17 @@ namespace Minecraft
                         try
                         {
                             Thread.CurrentThread.Name = "Network Player Thread";
-                            Console.WriteLine("Connection from: " + client.Client.RemoteEndPoint);
+                            Log.Debug("Connection from: " + client.Client.RemoteEndPoint);
+                            
                             // Start handling packets and connection
-                            ConnectionHandler handler = new ConnectionHandler(this, client);
+                            var handler = new ConnectionHandler(this, client);
                             _connections.Add(handler);
                             handler.Handle();
                         }
                         catch (Exception e)
                         {
-                            // Whooops
-                            ConsoleWrapper.ConsoleWriter.WriteError("Internal Code Error: " + e);
+                            // Ouch.
+                            Log.Error(e, "Internal Code Error!");
                         }
                     });
                 }
@@ -137,9 +149,8 @@ namespace Minecraft
             {
                 File.WriteAllText("crash.log", e.ToString());
 
-                Console.WriteLine(e.ToString());
-                ConsoleWrapper.ConsoleWriter.Writer.WriteLine("\nOh, It's looks like server was crashed due to error!");
-                ConsoleWrapper.ConsoleWriter.Writer.WriteLine("\nPress any key to continue . . .");
+                Log.Fatal(e, "Fatal error occurred!");
+                Log.Information("Press any key to continue . . .");
                 Console.Read();
             }
         }
@@ -149,6 +160,7 @@ namespace Minecraft
             Commands.RegisterCommand<HelpCommand>("help");
             Commands.RegisterCommand<TeleportCommand>("teleport");
             Commands.RegisterCommand<DisplayNameCommand>("displayname");
+            Commands.RegisterCommand<StopCommand>("stop");
         }
 
         private void RegisterPacketReceivers()

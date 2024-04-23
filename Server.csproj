@@ -1,17 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <OutputType>Exe</OutputType>
-	  <TargetFramework>net7.0</TargetFramework>
-	  <ImplicitUsings>disable</ImplicitUsings>
-	  <RootNamespace>Minecraft</RootNamespace>
-	  <Authors>TheDearbear</Authors>
-	  <Product>Minecraft C# Server</Product>
+      <OutputType>Exe</OutputType>
+      <TargetFramework>net7.0</TargetFramework>
+      <ImplicitUsings>disable</ImplicitUsings>
+      <RootNamespace>Minecraft</RootNamespace>
+      <Authors>TheDearbear</Authors>
+      <Product>Minecraft C# Server</Product>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Serilog" Version="3.1.1" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EditorConfigFiles Remove=".editorconfig" />
-	<None Include=".editorconfig" />
+    <None Include=".editorconfig" />
   </ItemGroup>
 
 </Project>

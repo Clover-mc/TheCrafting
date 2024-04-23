@@ -15,7 +15,7 @@ namespace Minecraft.Packets
         public int PacketLength => 3 + Reason.Length * 2;
         
         public IEnumerable<byte> Raw => new[] { (byte)Id }
-            .Concat(BitConverter.GetBytes((short)Reason.Length))
+            .Concat(BitConverter.GetBytes((short)Reason.Length).ToBigEndian())
             .Concat(Encoding.BigEndianUnicode.GetBytes(Reason));
 
         public DisconnectKickPacket(string reason)

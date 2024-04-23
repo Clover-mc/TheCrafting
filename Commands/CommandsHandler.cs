@@ -48,16 +48,13 @@ public class CommandsHandler
 
         switch (label)
         {
-            case "exit":
-                Environment.Exit(0);
-                break;
             case "chunk":
                 if (sender is ConsolePlayer)
                 {
                     sender.SendMessage("I cannot send chunk to console!");
                     break;
                 }
-                sender.Connection.SendPacket(new ChunkDataPacket(0, 0));
+                sender.Connection?.SendPacket(new ChunkDataPacket(0, 0));
                 break;
             case "blockpls":
                 if (sender is ConsolePlayer)
@@ -65,7 +62,7 @@ public class CommandsHandler
                     sender.SendMessage("I cannot add block to console's world!");
                     break;
                 }
-                sender.Connection.SendPacket(new BlockChangePacket(0, 128, 0, 1, 0));
+                sender.Connection?.SendPacket(new BlockChangePacket(0, 128, 0, 1, 0));
                 break;
             case "mstest":
                 MStream stream = new();
@@ -117,12 +114,6 @@ public class CommandsHandler
                 bytes = JsonSerializer.SerializeToUtf8Bytes(sheesh);
                 sender.SendMessage(BitConverter.ToString(bytes));
                 sender.SendMessage(Encoding.UTF8.GetString(bytes));
-                break;
-            case "contest":
-                Console.Write("AAA");
-                Console.Write("BBB");
-                Console.WriteLine("CCC");
-                Console.WriteLine("DDD");
                 break;
             case "colortest":
                 sender.SendMessage(ChatColor.Green + "Green! " + ChatColor.Reset + ChatColor.Strikethrough + "Ohhh... " + ChatColor.Reset + ChatColor.Bold + " I am bold! " + ChatColor.Reset + "I am normal!");
