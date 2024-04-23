@@ -116,8 +116,8 @@ public class CommandsHandler
                 sender.SendMessage(Encoding.UTF8.GetString(bytes));
                 break;
             case "colortest":
-                sender.SendMessage(ChatColor.Green + "Green! " + ChatColor.Reset + ChatColor.Strikethrough + "Ohhh... " + ChatColor.Reset + ChatColor.Bold + " I am bold! " + ChatColor.Reset + "I am normal!");
-                sender.SendMessage(ChatColor.Red + "Red pill " + ChatColor.Reset + "or " + ChatColor.Blue + "Blue " + ChatColor.Reset + "one?");
+                sender.SendMessage(ChatColor.Green + "Green! " + ChatColor.Reset + ChatColor.Strikethrough + "Ohhh..." + ChatColor.Reset + ChatColor.Bold + " I am bold! " + ChatColor.Reset + "I am normal!");
+                sender.SendMessage(ChatColor.Red + "Red pill " + ChatColor.Reset + "or a " + ChatColor.Blue + "Blue " + ChatColor.Reset + "one?");
                 break;
             case "ismyground":
                 sender.SendMessage((sender.IsOnGround ? ChatColor.Green + "Yeah, True" : ChatColor.Red + "Uhhh, False") + ChatColor.Reset);
