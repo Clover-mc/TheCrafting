@@ -1,32 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Minecraft;
 
-namespace Minecraft
+public enum PermissionLevel
 {
-    public enum PermissionLevel
-    {
-        /// <summary>
-        /// Default permission level for everyone, nothing special
-        /// </summary>
-        DEFAULT,
-        /// <summary>
-        /// Player can bypass spawn protection
-        /// </summary>
-        BYPASS_SPAWN,
-        /// <summary>
-        /// Player can execute commands like /clear, /gamemode, /give, /seed, /tp, /weather, etc
-        /// </summary>
-        CHEATS,
-        /// <summary>
-        /// Player can execute commands like /ban, /ban-ip, /pardon, /pardon-ip, /op, /deop, /kick, etc. +all from CHEATS
-        /// </summary>
-        MODERATOR,
-        /// <summary>
-        /// Player can execute commands like /save-all, /save-on, /save-off, /stop, etc. +all from MODERATOR
-        /// </summary>
-        OP
-    }
+    /// <summary>
+    /// Default permission level for everyone, nothing special
+    /// </summary>
+    Default,
+    /// <summary>
+    /// Player can bypass spawn protection
+    /// </summary>
+    BypassSpawn,
+    /// <summary>
+    /// Player can execute commands like /clear, /gamemode, /give, /seed, /tp, /weather, etc
+    /// </summary>
+    Cheats,
+    /// <summary>
+    /// Player can execute commands like /ban, /ban-ip, /pardon, /pardon-ip, /op, /deop, /kick, etc. +all from <see cref="Cheats"/>
+    /// </summary>
+    Moderator,
+    /// <summary>
+    /// Maximum permission level. Everything is allowed
+    /// </summary>
+    Op
 }

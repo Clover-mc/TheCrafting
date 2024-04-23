@@ -2,23 +2,28 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Minecraft.Packets.Receivers
+namespace Minecraft.Packets.Receivers;
+
+public sealed class ServerListPingPacketReceiver : IPacketReceiver
 {
-    public sealed class ServerListPingPacketReceiver : IPacketReceiver
+    public const int PacketLength = 2;
+
+    public bool AllowOverride => true;
+
+    public IEnumerable<byte> Process(ConnectionHandler handler, MinecraftServer server, IEnumerable<byte> rawPacket)
     {
-        public const int PACKET_LENGTH = 2;
+        Player player = handler.Player;
 
-        public bool AllowOverride => true;
-
-        public IEnumerable<byte> Process(ConnectionHandler handler, MinecraftServer server, IEnumerable<byte> rawPacket)
+        if (rawPacket.Count() >= PacketLength &&
+            player.Connection is not null &&
+            rawPacket.ElementAt(0) == (byte)PacketList.SERVER_LIST_PING &&
+            rawPacket.ElementAt(1) == 0x01)
         {
-            Player player = handler.Player;
-
-            if (rawPacket.ElementAt(1) == 1)
-                player.Connection.SendPacket(new ServerListPingPacket('1', 51, "1.4.7", server.Config.Motd, server.Players.Count, server.Config.MaxPlayers));
-
-            player.Connection.Close();
-            return rawPacket.Skip(PACKET_LENGTH);
+            player.Connection.SendPacket(new ServerListPingPacket('1', 51, "1.4.7", server.Config.Motd, server.Players.Count, server.Config.MaxPlayers));
         }
+
+        player.Connection?.Close();
+
+        return rawPacket.Skip(PacketLength);
     }
 }

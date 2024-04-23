@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
 using Minecraft.Packets;
 using Serilog;
@@ -13,7 +12,7 @@ namespace Minecraft
         private readonly Socket Client;
 
         public MinecraftServer Server { get; private set; }
-        public bool Connected { get => Client.Connected; }
+        public bool Connected => Client.Connected;
         public string Nickname { get; internal set; }
         public bool IsPlayer { get; internal set; }
 
@@ -26,15 +25,14 @@ namespace Minecraft
 
         public int SendPacket(IPacket packet)
         {
-            byte[] packet_raw = packet.Raw.ToArray();
+            byte[] packetRaw = packet.Raw.ToArray();
 
             if (Server.Settings.ShowOutgoing)
             {
-                Log.Debug("BINARY(HEX): " + BitConverter.ToString(packet_raw).Replace('-', ' '));
-                Log.Debug("UTF8: " + Encoding.UTF8.GetString(packet_raw));
+                Log.Debug("Outgoing Packet (to {Receiver}): {Packet}", Client.RemoteEndPoint, BitConverter.ToString(packetRaw).Replace('-', ' '));
             }
 
-            return Client.Send(packet_raw);
+            return Client.Send(packetRaw);
         }
 
         public Task<int> SendPacketAsync(IPacket packet)
@@ -43,8 +41,7 @@ namespace Minecraft
 
             if (Server.Settings.ShowOutgoing)
             {
-                Log.Debug("BINARY(HEX): " + BitConverter.ToString(packetRaw).Replace('-', ' '));
-                Log.Debug("UTF8: " + Encoding.UTF8.GetString(packetRaw));
+                Log.Debug("Outgoing Async Packet (to {Receiver}): {Packet}", Client.RemoteEndPoint, BitConverter.ToString(packetRaw).Replace('-', ' '));
             }
 
             return Client.SendAsync(packetRaw, SocketFlags.None);

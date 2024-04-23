@@ -1,18 +1,17 @@
-﻿using System;
+﻿using Minecraft.Entities;
+using Minecraft.Packets;
+using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
-using System.Text;
-
-using Minecraft.Entities;
-using Minecraft.Packets;
-using Serilog;
 
 namespace Minecraft
 {
     public class ConnectionHandler
     {
         public bool Connected { get => Player.Connection?.Connected ?? false; }
+        
         public bool IsPlayer
         {
             get => Player.Connection?.IsPlayer ?? true;
@@ -24,14 +23,19 @@ namespace Minecraft
                 }
             }
         }
+        
         public Player Player { get; private set; }
+        
         internal ulong TickId { get; set; }
-        private readonly MinecraftServer Server;
+        
+        readonly MinecraftServer _server;
+        readonly TcpClient _client;
 
         internal ConnectionHandler(MinecraftServer server, TcpClient client)
         {
-            Server = server;
-            Player = new Player(new PlayerConnection(Server, client.Client), "");
+            _server = server;
+            _client = client;
+            Player = new Player(new PlayerConnection(_server, _client.Client), string.Empty);
             IsPlayer = false;
         }
 
@@ -44,28 +48,28 @@ namespace Minecraft
                 if (!rawPacket.Any())
                     continue;
 
-                if (Server.Settings.ShowIncoming &&
+                if (_server.Settings.ShowIncoming &&
                     rawPacket.ElementAt(0) != 0x00 && rawPacket.ElementAt(0) != 0x0A &&
                     rawPacket.ElementAt(0) != 0x0B && rawPacket.ElementAt(0) != 0x0D &&
                     rawPacket.ElementAt(0) != 0x0C && rawPacket.ElementAt(0) != 0xC9)
                 {
-                    Log.Debug("==New incoming packet==");
-                    Log.Debug("RAW: " + BitConverter.ToString(rawPacket.ToArray(), 0, rawPacket.Count()).Replace('-', ' '));
-                    Log.Debug("STRING: " + Encoding.UTF8.GetString(rawPacket.ToArray()));
-                    Log.Debug("=======================");
+                    Log.Debug("Incoming Packet (from {Sender}): {Packet}", _client.Client.RemoteEndPoint, BitConverter.ToString(rawPacket.ToArray()).Replace('-', ' '));
                 }
 
                 while (rawPacket.Any()) rawPacket = Handle(rawPacket);
             }
-            Server.Interval.Cancel(Player.KeepaliveIndex);
+
+            _server.Interval.Cancel(Player.KeepaliveIndex);
         }
 
         internal IEnumerable<byte> Handle(IEnumerable<byte> rawPacket)
         {
             try
             {
-                if (Server.ReceiverStorage.TryGetValue(rawPacket.ElementAt(0), out IPacketReceiver? receiver))
-                    return receiver.Process(this, Server, rawPacket);
+                if (_server.ReceiverStorage.TryGetValue(rawPacket.ElementAt(0), out IPacketReceiver? receiver))
+                {
+                    return receiver.Process(this, _server, rawPacket);
+                }
             }
             catch(Exception e)
             {

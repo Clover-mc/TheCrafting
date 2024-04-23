@@ -4,19 +4,18 @@ using System.Linq;
 
 namespace Minecraft;
 
-/// <summary>
-/// Class for entry point of simple launcher
-/// </summary>
 internal class Program
 {
-    /// <summary>
-    /// Entry point of simple launcher
-    /// </summary>
-    /// <param name="args">Launch args</param>
-    /// <returns>Result code</returns>
     static int Main(string[] args)
     {
         var server = new MinecraftServer();
+
+        // Control-C Handler
+        Console.CancelKeyPress += (sender, e) =>
+        {
+            e.Cancel = true;
+            server.Stop();
+        };
 
         server.Files.Initialize();
 
