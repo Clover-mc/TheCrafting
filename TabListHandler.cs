@@ -52,12 +52,9 @@ namespace Minecraft
         public void Update()
         {
             IEnumerable<TabListPlayer> toRemove = Players.Where(player =>
-            {
-                bool notOnServer = !_server.Players.Where(serverPlayer => serverPlayer.Nickname.Equals(player.Nickname, StringComparison.OrdinalIgnoreCase)).Any();
-                bool differentDisplayName = _server.Players.Where(serverPlayer => serverPlayer.DisplayName != player.DisplayName).Any();
-
-                return notOnServer || differentDisplayName;
-            });
+                !_server.Players.Any(serverPlayer =>
+                    serverPlayer.Nickname.Equals(player.Nickname, StringComparison.OrdinalIgnoreCase) ||
+                    serverPlayer.DisplayName.Equals(player.DisplayName, StringComparison.OrdinalIgnoreCase)));
 
             foreach (Player player in _server.Players)
                 foreach (TabListPlayer remove in toRemove)
