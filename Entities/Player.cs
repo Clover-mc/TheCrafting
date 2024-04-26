@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Minecraft.Packets;
+using Minecraft.Network;
+using Minecraft.Network.Packets;
 
 namespace Minecraft.Entities
 {
@@ -44,7 +45,7 @@ namespace Minecraft.Entities
         /// <summary>
         /// Keepalive packets that player didn't answer
         /// </summary>
-        internal List<KeepalivePacket.KeepaliveMesssage> KeepalivePending = new();
+        internal List<KeepalivePacket.KeepaliveMessage> KeepalivePending = new();
 
         string _nickname;
         string? _displayName;

@@ -1,5 +1,5 @@
 ﻿using Minecraft.Entities;
-using Minecraft.Packets;
+using Minecraft.Network.Packets;
 using System.Collections.Generic;
 
 namespace Minecraft.Commands;

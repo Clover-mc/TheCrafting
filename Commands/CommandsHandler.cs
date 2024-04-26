@@ -2,7 +2,7 @@
 using System.Linq;
 
 using Minecraft.Entities;
-using Minecraft.Packets;
+using Minecraft.Network.Packets;
 
 namespace Minecraft.Commands;
 

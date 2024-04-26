@@ -17,12 +17,14 @@ public static class ZLib
 
     public static byte[] Decompress(byte[] data)
     {
-        var input = new MemoryStream(data);
         var output = new MemoryStream();
+
+        using (var input = new MemoryStream(data))
         using (var stream = new DeflateStream(output, CompressionMode.Decompress))
         {
             input.CopyTo(output);
         }
+        
         return output.ToArray();
     }
 }

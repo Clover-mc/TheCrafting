@@ -7,20 +7,20 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Minecraft.Commands;
 using Minecraft.Configs;
 using Minecraft.Entities;
-using Minecraft.Packets;
-using Minecraft.Packets.Receivers;
+using Minecraft.Network;
+using Minecraft.Network.Packets;
+using Minecraft.Network.Packets.Receivers;
 using Minecraft.Tools;
 using Serilog;
 
 namespace Minecraft
 {
-    public class MinecraftServer
+    public partial class MinecraftServer
     {
         public DateTime StartTime { get; private set; }
         public ServerSettings Settings { get; private set; } = new();
@@ -37,12 +37,13 @@ namespace Minecraft
                 .AsReadOnly();
         }
 
+        public FilePaths Files { get; } = new();
+        public ConsolePlayer ConsolePlayer { get; } = new();
+
         #region Internal (Dirty) stuff
-        public FilesHandler Files { get; } = new();
         public IntervalStorage Interval { get; } = new();
         public ConfigManager Config { get; } = new("server.properties.json");
         public PacketReceiverStorage ReceiverStorage { get; } = new();
-        public ConsolePlayer ConsolePlayer { get; } = new();
         #endregion
 
         public CommandsHandler Commands { get; } = new();
@@ -96,9 +97,7 @@ namespace Minecraft
             StartTime = DateTime.Now;
             Settings = settings;
 
-            Thread.CurrentThread.Name = "Main";
-
-            Files.Initialize();
+            Files.ArchiveLatestLog();
 
             RegisterCommands();
             RegisterPacketReceivers();
@@ -128,7 +127,6 @@ namespace Minecraft
                     {
                         try
                         {
-                            Thread.CurrentThread.Name = "Network Player Thread";
                             Log.Debug("Connection from: " + client.Client.RemoteEndPoint);
                             
                             // Start handling packets and connection
@@ -139,7 +137,7 @@ namespace Minecraft
                         catch (Exception e)
                         {
                             // Ouch.
-                            Log.Error(e, "Internal Code Error!");
+                            Log.Error(e, "Connection Handler Error!");
                         }
                     });
                 }
@@ -155,7 +153,7 @@ namespace Minecraft
             }
         }
 
-        private void RegisterCommands()
+        void RegisterCommands()
         {
             Commands.RegisterCommand<HelpCommand>("help");
             Commands.RegisterCommand<TeleportCommand>("teleport");
@@ -163,7 +161,7 @@ namespace Minecraft
             Commands.RegisterCommand<StopCommand>("stop");
         }
 
-        private void RegisterPacketReceivers()
+        void RegisterPacketReceivers()
         {
             ReceiverStorage.Add(0x00, new KeepalivePacketReceiver());
             ReceiverStorage.Add(0x02, new HandshakePacketReceiver());

@@ -1,8 +1,7 @@
-﻿using Serilog;
+﻿using Minecraft;
+using Serilog;
 using System;
 using System.Linq;
-
-namespace Minecraft;
 
 internal class Program
 {
@@ -17,7 +16,7 @@ internal class Program
             server.Stop();
         };
 
-        server.Files.Initialize();
+        server.Files.ArchiveLatestLog();
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
