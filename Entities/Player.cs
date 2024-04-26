@@ -67,18 +67,18 @@ namespace Minecraft.Entities
 
         public virtual void SendMessage(string message)
         {
-            Connection?.SendPacket(new ChatMessagePacket(message));
+            Connection?.SendPackets(new ChatMessagePacket(message));
         }
 
         public virtual void Disconnect(string message = "Disconnected.")
         {
             if (Connection is not null && Connection.Connected)
             {
-                Connection.SendPacket(new DisconnectKickPacket(message));
+                Connection.SendPackets(new DisconnectKickPacket(message));
                 Connection.Close();
 
                 foreach (Player player in Connection.Server.Players)
-                    player.Connection?.SendPacketAsync(new DestroyEntityPacket(EntityId));
+                    player.Connection?.SendPacketsAsync(new DestroyEntityPacket(EntityId));
             }
 
             Connection = null;

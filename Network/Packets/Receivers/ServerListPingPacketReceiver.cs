@@ -19,7 +19,7 @@ public sealed class ServerListPingPacketReceiver : IPacketReceiver
             rawPacket.ElementAt(0) == (byte)PacketList.ServerListPing &&
             rawPacket.ElementAt(1) == 0x01)
         {
-            player.Connection.SendPacket(new ServerListPingPacket('1', 51, "1.4.7", server.Config.Motd, server.Players.Count, server.Config.MaxPlayers));
+            player.Connection.SendPackets(new ServerListPingPacket('1', 51, "1.4.7", server.Config.Motd, server.Players.Count, server.Config.MaxPlayers));
         }
 
         player.Connection?.Close();

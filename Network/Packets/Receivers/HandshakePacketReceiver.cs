@@ -46,10 +46,11 @@ namespace Minecraft.Network.Packets.Receivers
 
                 player.DisplayName = player.Nickname = packet.Nickname;
 
-                player.Connection?.SendPacket(new LoginRequestPacket(0, LevelType.Default, GameMode.Creative, Dimension.OVERWORLD, Difficulty.NORMAL, (byte)(server.Config.MaxPlayers > 255 ? 255 : server.Config.MaxPlayers)));
-                player.Connection?.SendPacket(new PlayerPositionAndLookPacket(true, 0, 70, 0, 0, 0, 0, false));
-                player.Connection?.SendPacket(new MapChunkBulkPacket(49, true, new byte[] { 0 }));
-                player.Connection?.SendPacket(new PlayerListItemPacket(player.DisplayName, true, 10));
+                player.Connection?.SendPackets(
+                    new LoginRequestPacket(0, LevelType.Default, GameMode.Creative, Dimension.OVERWORLD, Difficulty.NORMAL, (byte)(server.Config.MaxPlayers > 255 ? 255 : server.Config.MaxPlayers)),
+                    new PlayerPositionAndLookPacket(true, 0, 70, 0, 0, 0, 0, false),
+                    new MapChunkBulkPacket(49, true, new byte[] { 0 }),
+                    new PlayerListItemPacket(player.DisplayName, true, 10));
 
                 handler.IsPlayer = true;
 
@@ -68,7 +69,7 @@ namespace Minecraft.Network.Packets.Receivers
                         }
                         var packet = new KeepalivePacket();
                         player.KeepalivePending.Add(new KeepalivePacket.KeepaliveMessage(packet.Payload, DateTime.Now));
-                        player.Connection.SendPacket(packet);
+                        player.Connection.SendPackets(packet);
                     }
                     else
                     {
@@ -97,7 +98,7 @@ namespace Minecraft.Network.Packets.Receivers
                 }
 
                 foreach (Player player in server.Worlds[0].Entities.OfType<Player>().Where(p => p.Connection?.Connected == true && p.EntityId != handler.Player.EntityId))
-                    player.Connection?.SendPacketAsync(new PlayerPositionAndLookPacket(true, player.IsOnGround, player.Location.Y + 0.2, player.Location));
+                    player.Connection?.SendPacketsAsync(new PlayerPositionAndLookPacket(true, player.IsOnGround, player.Location.Y + 0.2, player.Location));
             }, TimeSpan.FromMicroseconds(1000 / 20));
         }
 

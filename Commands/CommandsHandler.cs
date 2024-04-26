@@ -50,7 +50,7 @@ public class CommandsHandler
                     sender.SendMessage("Get real");
                     break;
                 }
-                sender.Connection?.SendPacket(new ChunkDataPacket(0, 0));
+                sender.Connection?.SendPackets(new ChunkDataPacket(0, 0));
                 break;
             case "blockpls":
                 if (sender is ConsolePlayer)
@@ -58,7 +58,7 @@ public class CommandsHandler
                     sender.SendMessage("Get real");
                     break;
                 }
-                sender.Connection?.SendPacket(new BlockChangePacket(0, 128, 0, 1, 0));
+                sender.Connection?.SendPackets(new BlockChangePacket(0, 128, 0, 1, 0));
                 break;
             case "overflow":
                 byte[] mybytes = new byte[5];

@@ -23,28 +23,14 @@ namespace Minecraft.Network
             Nickname = string.Empty;
         }
 
-        public int SendPacket(IPacket packet)
+        public int SendPackets(params IPacket[] packets)
         {
-            byte[] packetRaw = packet.Raw.ToArray();
-
-            if (Server.Settings.ShowOutgoing)
-            {
-                Log.Debug("Outgoing Packet (to {Receiver}): {Packet}", Client.RemoteEndPoint, BitConverter.ToString(packetRaw).Replace('-', ' '));
-            }
-
-            return Client.Send(packetRaw);
+            return Client.Send(GetPacketsPayload(false, packets));
         }
 
-        public Task<int> SendPacketAsync(IPacket packet)
+        public Task<int> SendPacketsAsync(params IPacket[] packets)
         {
-            byte[] packetRaw = packet.Raw.ToArray();
-
-            if (Server.Settings.ShowOutgoing)
-            {
-                Log.Debug("Outgoing Async Packet (to {Receiver}): {Packet}", Client.RemoteEndPoint, BitConverter.ToString(packetRaw).Replace('-', ' '));
-            }
-
-            return Client.SendAsync(packetRaw, SocketFlags.None);
+            return Client.SendAsync(GetPacketsPayload(true, packets));
         }
 
         public void Close()
@@ -75,6 +61,26 @@ namespace Minecraft.Network
             }
 
             return bytes;
+        }
+
+        byte[] GetPacketsPayload(bool asyncMessage, params IPacket[] packets)
+        {
+            byte[] raw;
+            if (packets.Length == 1)
+            {
+                raw = packets[0].Raw.ToArray();
+            }
+            else
+            {
+                raw = packets.SelectMany(x => x.Raw).ToArray();
+            }
+
+            if (Server.Settings.ShowOutgoing)
+            {
+                Log.Debug($"Outgoing{(asyncMessage ? " Async" : string.Empty)} Packet (to {{Receiver}}): {{Packet}}", Client.RemoteEndPoint, BitConverter.ToString(raw).Replace('-', ' '));
+            }
+
+            return raw;
         }
     }
 }

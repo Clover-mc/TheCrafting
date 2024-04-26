@@ -37,7 +37,7 @@ public class TeleportCommand : ICommand
             return true;
         }
 
-        player.Connection.SendPacket(new PlayerPositionPacket(x, y, z, 0, false));
+        player.Connection.SendPackets(new PlayerPositionPacket(x, y, z, 0, false));
         return true;
     }
 

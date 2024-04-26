@@ -1,97 +1,151 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
-
-using Minecraft.Entities;
+﻿using Minecraft.Entities;
 using Minecraft.Network.Packets;
+using Serilog;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Minecraft.Network
+namespace Minecraft.Network;
+
+/// <summary>
+/// Delegate for obtaining current list of players for tab list
+/// </summary>
+/// <param name="server">Current running server</param>
+/// <param name="current">List of currently displaying players</param>
+/// <returns>New value for <see cref="TabListHandler.Players"/> if <see langword="not"/> <see langword="null"/>, ignored otherwise</returns>
+public delegate IEnumerable<TabListPlayer>? GetPlayersDelegate(MinecraftServer server, List<TabListPlayer> current);
+
+public class TabListHandler
 {
-    public class TabListHandler
-    {
-        public List<TabListPlayer> Players { get; } = new();
+    public List<TabListPlayer> Players { get; } = new();
 
-        bool _enabled;
-        public bool Enabled
+    public GetPlayersDelegate PlayersDelegate { get; set; } = GetPlayersList;
+
+    bool _enabled = false;
+    CancellationTokenSource _ctSource = new();
+    public bool Enabled
+    {
+        get => _enabled;
+        set
         {
-            get => _enabled;
-            set
+            if (!Enabled && value != Enabled)
             {
-                if (!Enabled && value != Enabled)
+                if (!_ctSource.TryReset())
                 {
-                    Start();
+                    _ctSource = new();
                 }
-                _enabled = value;
+
+                Start(_ctSource.Token);
+            }
+
+            if (Enabled && value != Enabled)
+            {
+                _ctSource.Cancel();
+            }
+
+            _enabled = value;
+        }
+    }
+
+    readonly MinecraftServer _server;
+
+    internal TabListHandler(MinecraftServer server)
+    {
+        _server = server;
+    }
+
+    private void Start(CancellationToken token)
+    {
+        Task.Run(async () =>
+        {
+            while (Enabled)
+            {
+                token.ThrowIfCancellationRequested();
+
+                try
+                {
+                    Update(PlayersDelegate.Invoke(_server, Players));
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Unable to update tab list!");
+                }
+
+                await Task.Delay(1000);
+            }
+        }, token);
+    }
+
+    /// <summary>
+    /// Updates info about players and sends it to everyone
+    /// </summary>
+    public void Update(IEnumerable<TabListPlayer>? players)
+    {
+        // Clear list for clients
+        IPacket[] packetBuffer = Players
+            .Select(x => new PlayerListItemPacket(x.DisplayName, false, 0))
+            .ToArray();
+
+        foreach (Player player in _server.Players)
+            if (player.Connection?.Connected == true)
+                player.Connection.SendPacketsAsync(packetBuffer);
+
+        var newPlayers = players?.ToList() ?? Players;
+
+        // Update list
+        Players.Clear();
+        Players.AddRange(newPlayers);
+
+        // Send new list to clients
+        packetBuffer = Players
+            .Select(x => new PlayerListItemPacket(x.DisplayName, x.IsOnline, x.Ping))
+            .ToArray();
+
+        foreach (Player player in _server.Players)
+            if (player.Connection?.Connected == true)
+                player.Connection.SendPacketsAsync(packetBuffer);
+    }
+
+    public static IEnumerable<TabListPlayer>? GetPlayersList(MinecraftServer server, List<TabListPlayer> current)
+    {
+        var currentCopy = new List<TabListPlayer>(current);
+        var players = server.Players.ToList();
+
+        // Remove disconnected players
+        foreach (var tabEntry in current)
+        {
+            var index = players.FindIndex(x => x.Nickname.Equals(tabEntry.Nickname, StringComparison.OrdinalIgnoreCase));
+            if (index == -1)
+            {
+                currentCopy.RemoveAll(x => x.Nickname.Equals(tabEntry.Nickname, StringComparison.OrdinalIgnoreCase));
             }
         }
 
-        readonly MinecraftServer _server;
-
-        internal TabListHandler(MinecraftServer server)
+        // Add newly connected players
+        foreach (var player in players)
         {
-            _server = server;
-        }
-
-        private void Start()
-        {
-            Task.Run(async () =>
+            var index = currentCopy.FindIndex(x => x.Nickname.Equals(player.Nickname, StringComparison.OrdinalIgnoreCase));
+            if (index == -1)
             {
-                while (Enabled)
-                {
-                    Update();
-
-                    await Task.Delay(1000);
-                }
-            });
-        }
-
-        /// <summary>
-        /// Updates info about players and sends it to everyone
-        /// </summary>
-        public void Update()
-        {
-            List<TabListPlayer> toRemove = Players.FindAll(player =>
-                _server.Players.Any(serverPlayer => serverPlayer.Nickname.Equals(player.Nickname, StringComparison.OrdinalIgnoreCase)));
-
-            foreach (Player player in _server.Players)
-                foreach (TabListPlayer remove in toRemove)
-                    if (player.Connection?.Connected == true)
-                        player.Connection.SendPacketAsync(new PlayerListItemPacket(remove.DisplayName, false, 0));
-
-            // Removing all real players from list ...
-            Players.RemoveAll(player => !player.Dummy);
-
-            // and adding them again!
-            foreach (Player player in _server.Players)
-                Players.Add(new TabListPlayer(player.Nickname)
+                currentCopy.Add(new(player.Nickname)
                 {
                     DisplayName = player.DisplayName,
-                    IsOnline = player.Connection?.Connected == true,
-                    Ping = player.Ping,
                     Dummy = false
                 });
-
-            foreach (Player player in _server.Players)
-                foreach (TabListPlayer tabPlayer in Players)
-                    if (player.Connection?.Connected == true)
-                        player.Connection.SendPacketAsync(new PlayerListItemPacket(tabPlayer.DisplayName, tabPlayer.IsOnline, tabPlayer.Ping));
+            }
         }
 
-        public struct TabListPlayer
+        for (int i = 0; i < currentCopy.Count; i++)
         {
-            public readonly string Nickname;
-
-            public string DisplayName;
-            public short Ping;
-            public bool IsOnline;
-            internal bool Dummy = true;
-
-            public TabListPlayer()
-                : this(string.Empty) { }
-
-            public TabListPlayer(string nickname)
-                => (Nickname, DisplayName, Ping, IsOnline, Dummy) = (nickname, "", 0, true, true);
+            var entry = currentCopy[i];
+            entry.DisplayName = players.First(x => x.Nickname.Equals(entry.Nickname, StringComparison.OrdinalIgnoreCase)).DisplayName;
+            currentCopy[i] = entry;
         }
+
+        currentCopy.Sort((x, y) => StringComparer.OrdinalIgnoreCase.Compare(x.DisplayName, y.DisplayName));
+
+        return currentCopy;
     }
 }
