@@ -26,16 +26,11 @@ namespace Minecraft
         public ServerSettings Settings { get; private set; } = new();
         public bool Enabled { get; private set; }
 
-        public IReadOnlyList<ConnectionHandler> Connections { get => _connections.AsReadOnly(); }
-        public IReadOnlyList<Player> Players
-        {
-            get => Worlds.SelectMany(w => w.Entities
-                    .Select(kv => kv.Value)
-                    .OfType<Player>()
-                    .Where(player => player.Connection?.Connected == true))
-                .ToList()
-                .AsReadOnly();
-        }
+        public IReadOnlyList<ConnectionHandler> Connections => _connections.AsReadOnly();
+        public IEnumerable<Player> Players => Worlds.SelectMany(w => w.Entities
+            .Select(kv => kv.Value)
+            .OfType<Player>()
+            .Where(player => player.Connection?.Connected == true));
 
         public FilePaths Files { get; } = new();
         public ConsolePlayer ConsolePlayer { get; } = new();
@@ -61,7 +56,7 @@ namespace Minecraft
         {
             InitVariables(settings);
 
-            Worlds.Add(new World(LevelType.Flat) { Dimension = Dimension.OVERWORLD });
+            Worlds.Add(new World(LevelType.Flat, Dimension.Overworld));
 
             var listener = new TcpListener(IPAddress.Any, Config.Port);
             listener.Start();

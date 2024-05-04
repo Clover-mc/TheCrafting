@@ -1,33 +1,37 @@
-﻿using System.Collections.Generic;
+﻿using Serilog;
+using System.Collections.Generic;
 using System.Linq;
-using Serilog;
 
-namespace Minecraft.Network.Packets.Receivers
+namespace Minecraft.Network.Packets.Receivers;
+
+public sealed class ChatMessagePacketReceiver : IPacketReceiver
 {
-    public sealed class ChatMessagePacketReceiver : IPacketReceiver
+    public bool AllowOverride => true;
+
+    public IEnumerable<byte> Process(ConnectionHandler handler, MinecraftServer server, IEnumerable<byte> rawPacket)
     {
-        public bool AllowOverride => true;
-
-        public IEnumerable<byte> Process(ConnectionHandler handler, MinecraftServer server, IEnumerable<byte> rawPacket)
+        if (rawPacket.Count() < 3 || rawPacket.ElementAt(0) != (byte)PacketList.ChatMessage)
         {
-            var player = handler.Player;
-            var packet = new ChatMessagePacket(rawPacket);
-
-            packet.Text = packet.Text.Trim();
-
-            if (packet.Text.StartsWith('/'))
-            {
-                server.Commands.TryParse(packet.Text, player);
-            }
-            else
-            {
-                string message = $"<{handler.Player.DisplayName}> {packet.Text}";
-
-                Log.Information(message);
-                server.BroadcastMessage(message);
-            }
-
-            return rawPacket.Skip(packet.PacketLength);
+            return rawPacket;
         }
+
+        var player = handler.Player;
+        var packet = new ChatMessagePacket(rawPacket);
+
+        var text = packet.Text.Trim();
+
+        if (text.StartsWith('/'))
+        {
+            server.Commands.TryParse(text, player);
+        }
+        else
+        {
+            string message = $"<{player.DisplayName}> {text}";
+
+            Log.Information(message);
+            server.BroadcastMessage(message);
+        }
+
+        return rawPacket.Skip(packet.PacketLength);
     }
 }

@@ -5,7 +5,7 @@ namespace Minecraft.Tools;
 
 public static class ArrayExtensions
 {
-    public static T[] ToBigEndian<T>(this T[] array)
+    public static T[] BigEndian<T>(this T[] array)
     {
         if (BitConverter.IsLittleEndian)
         {

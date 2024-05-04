@@ -47,7 +47,7 @@ namespace Minecraft.Network.Packets.Receivers
                 player.DisplayName = player.Nickname = packet.Nickname;
 
                 player.Connection?.SendPackets(
-                    new LoginRequestPacket(0, LevelType.Default, GameMode.Creative, Dimension.OVERWORLD, Difficulty.NORMAL, (byte)(server.Config.MaxPlayers > 255 ? 255 : server.Config.MaxPlayers)),
+                    new LoginRequestPacket(0, LevelType.Default, GameMode.Creative, Dimension.Overworld, Difficulty.Normal, (byte)(server.Config.MaxPlayers > 255 ? 255 : server.Config.MaxPlayers)),
                     new PlayerPositionAndLookPacket(true, 0, 70, 0, 0, 0, 0, false),
                     new MapChunkBulkPacket(49, true, new byte[] { 0 }),
                     new PlayerListItemPacket(player.DisplayName, true, 10));
@@ -84,7 +84,8 @@ namespace Minecraft.Network.Packets.Receivers
 
                 return rawPacket.Skip(packet.PacketLength);
             }
-            else return Array.Empty<byte>();
+            
+            return Array.Empty<byte>();
         }
 
         static void StartTicking(ConnectionHandler handler, MinecraftServer server)

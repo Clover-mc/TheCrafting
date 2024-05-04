@@ -1,43 +1,52 @@
 ﻿using Minecraft.Tools;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
-namespace Minecraft.Network.Packets
+namespace Minecraft.Network.Packets;
+
+public sealed class ServerListPingPacket : IPacket
 {
-    public class ServerListPingPacket : IPacket
+    public byte Magic { get; set; }
+
+    public PacketList Id => PacketList.ServerListPing;
+
+    public int PacketLength => 2;
+    
+    public IEnumerable<byte> Raw => new[] { (byte)Id, Magic };
+
+    public static DisconnectKickPacket GetResponse(
+        byte pingVersion,
+        int protocolVersion,
+        string versionName,
+        string description,
+        int onlinePlayers,
+        int maxPlayers)
     {
-        private MStream Stream;
+        return new DisconnectKickPacket(new[] { (byte)PacketList.DisconnectKick }
+            .Concat(BitConverter.GetBytes(24 + versionName.Length * 2 + description.Length * 2))
+            .Append((byte)0xA7)
+            .Append(pingVersion)
+            .Append((byte)0)
+            .Concat(BitConverter.GetBytes(protocolVersion).BigEndian())
+            .Append((byte)0)
+            .Concat(BitConverter.GetBytes((short)versionName.Length).BigEndian())
+            .Concat(Encoding.BigEndianUnicode.GetBytes(versionName))
+            .Append((byte)0)
+            .Concat(BitConverter.GetBytes((short)description.Length).BigEndian())
+            .Concat(Encoding.BigEndianUnicode.GetBytes(description))
+            .Append((byte)0)
+            .Concat(BitConverter.GetBytes(onlinePlayers).BigEndian())
+            .Append((byte)0)
+            .Concat(BitConverter.GetBytes(maxPlayers).BigEndian()));
+    }
 
-        public char PingVersion { get; private set; }
-        public int ProtocolVersion { get; private set; }
-        public string VersionName { get; private set; }
-        public string Description { get; private set; }
-        public int OnlinePlayers { get; private set; }
-        public int MaxPlayers { get; private set; }
-
-        public PacketList Id => PacketList.ServerListPing;
-        public int PacketLength => -1;
-        public IEnumerable<byte> Raw => Stream.Array;
-
-        public ServerListPingPacket(char ping_version, int protocol_version, string version_name,
-                                    string description, int online_players, int max_players)
-        {
-            PingVersion = ping_version;
-            ProtocolVersion = protocol_version;
-            VersionName = version_name;
-            Description = description;
-            OnlinePlayers = online_players;
-            MaxPlayers = max_players;
-
-            Stream = new MStream();
-            Stream.WriteByte((byte)PacketList.DisconnectKick);
-            Stream.Write(
-                '\xA7' + PingVersion.ToString() +
-                '\0' + ProtocolVersion +
-                '\0' + VersionName +
-                '\0' + Description +
-                '\0' + OnlinePlayers +
-                '\0' + MaxPlayers
-            );
-        }
+    public static DisconnectKickPacket GetLegacyResponse(
+        string description,
+        int onlinePlayers,
+        int maxPlayers)
+    {
+        return new DisconnectKickPacket($"{description}\xA7{onlinePlayers}\xA7{maxPlayers}");
     }
 }

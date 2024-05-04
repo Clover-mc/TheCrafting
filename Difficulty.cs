@@ -1,10 +1,9 @@
-﻿namespace Minecraft
+﻿namespace Minecraft;
+
+public enum Difficulty : byte
 {
-    public enum Difficulty : byte
-    {
-        PEACEFUL = 0,
-        EASY     = 1,
-        NORMAL   = 2,
-        HARD     = 3
-    }
+    Peaceful,
+    Easy,
+    Normal,
+    Hard
 }

@@ -7,16 +7,15 @@ namespace Minecraft;
 public class World
 {
     public Dimension Dimension { get; set; }
-    public byte WorldHeight { get; set; }
+    public byte WorldHeight { get; set; } = 0xFF;
     public LevelType LevelType { get; set; }
     public string? Path { get; private set; }
-    public Dictionary<uint, IEntity> Entities { get; private set; }
+    public Dictionary<uint, IEntity> Entities { get; private set; } = new();
 
-    internal World(LevelType type)
+    internal World(LevelType type, Dimension dimension)
     {
         LevelType = type;
-        Entities = new();
-        WorldHeight = 0xFF;
+        Dimension = dimension;
     }
 
     public uint RegisterEntity(IEntity entity)

@@ -13,13 +13,21 @@ public sealed class ServerListPingPacketReceiver : IPacketReceiver
     public IEnumerable<byte> Process(ConnectionHandler handler, MinecraftServer server, IEnumerable<byte> rawPacket)
     {
         Player player = handler.Player;
+        var count = rawPacket.Count();
 
-        if (rawPacket.Count() >= PacketLength &&
+        if (count >= 1 &&
             player.Connection is not null &&
-            rawPacket.ElementAt(0) == (byte)PacketList.ServerListPing &&
-            rawPacket.ElementAt(1) == 0x01)
+            rawPacket.ElementAt(0) == (byte)PacketList.ServerListPing)
         {
-            player.Connection.SendPackets(new ServerListPingPacket('1', 51, "1.4.7", server.Config.Motd, server.Players.Count, server.Config.MaxPlayers));
+            if (count >= 2 && rawPacket.ElementAt(1) == 0x01)
+            {
+                player.Connection.SendPackets(ServerListPingPacket.GetResponse((byte)'1', 51, "1.4.7", server.Config.Motd, server.Players.Count(), server.Config.MaxPlayers));
+            }
+            else if (count == 1)
+            {
+                player.Connection.SendPackets(ServerListPingPacket.GetLegacyResponse("Minecraft 1.4 required",
+                    server.Players.Count(), server.Config.MaxPlayers));
+            }
         }
 
         player.Connection?.Close();
